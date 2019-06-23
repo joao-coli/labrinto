@@ -4,13 +4,13 @@ TITLE Animation example
 INCLUDE Irvine32.inc
 
 CHARTYPE UNION
-UnicodeChar    WORD ?
-AsciiChar      DB ?
+	UnicodeChar    WORD ?
+	AsciiChar      DB ?
 CHARTYPE ENDS
 
 CHAR_INFO STRUCT
-Char          CHARTYPE <>
-Attributes    WORD ?
+	Char          CHARTYPE <>
+	Attributes    WORD ?
 CHAR_INFO ENDS
 
 WriteConsoleOutput EQU <WriteConsoleOutputA>
@@ -23,12 +23,11 @@ hConsoleOutput : HANDLE,
     lpWriteRegion : PTR SMALL_RECT
 
 
-    COLS = 120; number of columns
-    ROWS = 30; number of rows
-    CHAR_ATTRIBUTE = 0Fh; bright white foreground
-
-
 .data
+	COLS = 120; number of columns;//Quantidade de colunas do mapa
+	ROWS = 30; number of rows;//Quantidade de linhas do mapa
+	CHAR_ATTRIBUTE = 0Ah;//Cor dos elementos do buffer
+
     console HANDLE 0
     buffer CHAR_INFO ROWS * COLS DUP(<< '-' > , CHAR_ATTRIBUTE > )
     bufferSize COORD <COLS, ROWS>
@@ -36,8 +35,8 @@ hConsoleOutput : HANDLE,
     region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
 
     x DWORD 0; current position
-    y DWORD 2; of the figure
-    character WORD 023h ; filled with this symbol
+    y DWORD 0; of the figure
+    character WORD 023h ;//Personagem principal
 
     CONTROLE byte 0
 
@@ -47,7 +46,7 @@ main PROC
     INVOKE GetStdHandle, STD_OUTPUT_HANDLE
     mov console, eax; save console handle
 
-    mov ecx, 100; draw 70 frames
+    mov ecx, 1000; draw 70 frames
 ANIMATION :
     push ecx
     call RenderScene
@@ -88,38 +87,42 @@ CharToBuffer ENDP
 RenderScene PROC USES eax edx ecx
     CALL ClearBuffer
 
-    ; render 10 by 7 rectangle
     mov edx, y
-    mov ecx, 1
-ONELINE:
     mov eax, x
 
-    push ecx
-    mov ecx, 1
-
-ONECHAR :
     INVOKE CharToBuffer, eax, edx, character
-    inc eax
-    loop ONECHAR; inner loop prints characters
 
-    inc edx
-    pop ecx
-    loop ONELINE; outer loop prints lines
+	mov eax, 50
+	call Delay
+	call ReadKey
+	jz RESUME
 
-    cmp CONTROLE, 0
-    jz INCREMENTO
-    jmp DECREMENTO
+	cmp ah, 50h;//CIMA
+	jz INCREMENTO_Y
+	cmp ah, 48h
+	jz DECREMENTO_Y;//BAIXO
+	cmp ah, 4Dh
+	jz INCREMENTO_X
+	cmp ah, 4Bh
+	jz DECREMENTO_X
+	jmp RESUME
 
-DECREMENTO:
+DECREMENTO_Y:
     dec y;
     cmp y, 0d
-    je SWITCH
     jmp RESUME
 
-INCREMENTO:
-    inc y; increment x for the next frame
+DECREMENTO_X :
+	dec x;
+	jmp RESUME
+
+INCREMENTO_X :
+	inc x
+	jmp RESUME
+
+INCREMENTO_Y:
+    inc y
     cmp y, 29d
-    je SWITCH
 
 RESUME:
     ;inc character; change fill character for the next frame
