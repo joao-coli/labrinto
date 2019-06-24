@@ -23,6 +23,14 @@ hConsoleOutput : HANDLE,
     dwBufferCoord : COORD,
     lpWriteRegion : PTR SMALL_RECT
 
+RenderScene PROTO,
+    posx: DWORD,
+    posy: DWORD
+
+ChecaColisao PROTO,
+    px: DWORD,
+    py: DWORD
+
 
 .data
 	COLS = 120; number of columns;//Quantidade de colunas do mapa
@@ -47,15 +55,27 @@ main PROC
     INVOKE GetStdHandle, STD_OUTPUT_HANDLE
     mov console, eax; save console handle
 
-    mov ecx, 1000; draw 70 frames
-ANIMATION :
+ANIMATION:
     push ecx
-    call RenderScene
+    invoke RenderScene, OFFSET x, OFFSET y
+
+    invoke ChecaColisao, x, y
+    cmp eax, 0
+    jz CONTINUE
+    cmp eax, 1
+    jmp RESTART
+    ;jmp PROXIMA_FASE
+
+RESTART:
+    mov x, 59
+    mov y, 14
+
+CONTINUE:
     invoke WriteConsoleOutput, console,
     ADDR buffer, bufferSize, bufferCoord, ADDR region
-    INVOKE Sleep, 50; delay between frames
+    INVOKE Sleep, 10; delay between frames
     pop ecx
-    loop ANIMATION
+    jmp ANIMATION
 
 exit
 main ENDP
@@ -109,18 +129,20 @@ CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD
 CharToBuffer ENDP
 
 
-RenderScene PROC USES eax edx ecx
+RenderScene PROC USES eax edx ecx posx: DWORD, posy: DWORD
     CALL ClearBuffer
 
-    mov edx, y
-    mov eax, x
+    mov edx, posy
+    mov ecx, posx
 
-    INVOKE CharToBuffer, eax, edx, character
+    INVOKE CharToBuffer, [ecx], [edx], character
 
 	mov eax, 50
 	call Delay
 	call ReadKey
 	jz RESUME
+
+     mov edx, posy	;//Sobrescrevendo edx com posy; ReadKey altera EDX
 
 	cmp ah, 50h;//CIMA
 	jz INCREMENTO_Y
@@ -133,39 +155,49 @@ RenderScene PROC USES eax edx ecx
 	jmp RESUME
 
 DECREMENTO_Y:
-    dec y;
-    cmp y, 0d
+    dec DWORD PTR [edx]
     jmp RESUME
 
-DECREMENTO_X :
-	dec x;
+DECREMENTO_X:
+	dec DWORD PTR [ecx]
 	jmp RESUME
 
-INCREMENTO_X :
-	inc x
+INCREMENTO_X:
+	inc DWORD PTR [ecx]
 	jmp RESUME
 
 INCREMENTO_Y:
-    inc y
-    cmp y, 29d
+    inc DWORD PTR [edx]
 
 RESUME:
-    ;inc character; change fill character for the next frame
-
     ret
 
-SWITCH:
-    cmp CONTROLE, 0
-    je RECEBE_1
-    jmp RECEBE_0
-RECEBE_1: 
-    mov CONTROLE, 1
-    jmp RESUME
-RECEBE_0:
-    mov CONTROLE, 0
-    jmp RESUME
-
-
     RenderScene ENDP
+
+ChecaColisao PROC USES edx px: DWORD, py: DWORD
+    mov eax, py
+    mov edx, COLS
+    mul edx
+    add eax, px
+    cmp buffer[eax * CHAR_INFO].Char, ' '
+    jz NAO_COLIDIU
+    cmp buffer[eax * CHAR_INFO].Char, 0FEh
+    jz NAO_COLIDIU
+    cmp buffer[eax * CHAR_INFO].Char, '#'
+    jz COLIDIU_OBSTACULO
+    mov eax, 2 ;Colidiu com o Objetivo!
+RESUME2:
+    ret
+
+NAO_COLIDIU:
+    mov eax, 0
+    jmp RESUME2
+
+COLIDIU_OBSTACULO:
+    mov eax, 1
+    jmp RESUME2
+
+
+ChecaColisao ENDP
 
 END main
