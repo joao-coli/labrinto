@@ -26,7 +26,7 @@ hConsoleOutput : HANDLE,
 .data
 	COLS = 120; number of columns;//Quantidade de colunas do mapa
 	ROWS = 30; number of rows;//Quantidade de linhas do mapa
-	CHAR_ATTRIBUTE = 0Ah;//Cor dos elementos do buffer
+	CHAR_ATTRIBUTE = 0Fh;//Cor dos elementos do buffer
 
     console HANDLE 0
     buffer CHAR_INFO ROWS * COLS DUP(<< '-' > , CHAR_ATTRIBUTE > )
@@ -34,9 +34,9 @@ hConsoleOutput : HANDLE,
     bufferCoord COORD <0, 0>
     region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
 
-    x DWORD 0; current position
-    y DWORD 0; of the figure
-    character WORD 023h ;//Personagem principal
+    x DWORD 59; current position
+    y DWORD 14; of the figure
+    character WORD 0FEh ;//Personagem principal
 
     CONTROLE byte 0
 
@@ -52,7 +52,7 @@ ANIMATION :
     call RenderScene
     invoke WriteConsoleOutput, console,
     ADDR buffer, bufferSize, bufferCoord, ADDR region
-    INVOKE Sleep, 100; delay between frames
+    INVOKE Sleep, 50; delay between frames
     pop ecx
     loop ANIMATION
 
@@ -60,20 +60,39 @@ exit
 main ENDP
 
 
-ClearBuffer PROC USES eax
-    xor eax, eax
+ClearBuffer PROC USES eax ecx
+    xor eax, eax	;//EAX = 0
 
-BLANKS :
-    mov buffer[eax * CHAR_INFO].Char, ' '
-    inc eax
-    cmp eax, ROWS * COLS
-    jl BLANKS
+	LINHA1:
+	mov buffer[eax * CHAR_INFO].Char, '#'
+	inc eax
+	cmp eax, COLS
+	jl LINHA1
+
+
+	VAZIOS:
+    mov buffer[eax * CHAR_INFO].Char, '#'
+	mov ecx, COLS - 1
+		VAZIOSM:
+		inc eax
+		mov buffer[eax * CHAR_INFO].Char, ' '
+		loop VAZIOSM
+	mov buffer[eax * CHAR_INFO].Char, '#'
+	inc eax
+    cmp eax, (ROWS - 1) * (COLS - 2)
+    jl VAZIOS
+
+	LINHANROWS:
+	mov buffer[eax * CHAR_INFO].Char, '#'
+	inc eax
+	cmp eax, ROWS*COLS
+	jl LINHANROWS
 
     ret
 ClearBuffer ENDP
 
 
-CharToBuffer PROC USES eax edx bufx : DWORD, bufy : DWORD, char : WORD
+CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD
     mov eax, bufy
     mov edx, COLS
     mul edx
