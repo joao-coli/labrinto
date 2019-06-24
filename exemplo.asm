@@ -11,6 +11,7 @@ CHARTYPE ENDS
 CHAR_INFO STRUCT
 	Char          CHARTYPE <>
 	Attributes    WORD ?
+
 CHAR_INFO ENDS
 
 WriteConsoleOutput EQU <WriteConsoleOutputA>
@@ -26,7 +27,7 @@ hConsoleOutput : HANDLE,
 .data
 	COLS = 120; number of columns;//Quantidade de colunas do mapa
 	ROWS = 30; number of rows;//Quantidade de linhas do mapa
-	CHAR_ATTRIBUTE = 0Fh;//Cor dos elementos do buffer
+	CHAR_ATTRIBUTE = 6Fh;//Cor dos elementos do buffer
 
     console HANDLE 0
     buffer CHAR_INFO ROWS * COLS DUP(<< '-' > , CHAR_ATTRIBUTE > )
@@ -88,6 +89,10 @@ ClearBuffer PROC USES eax ecx
 	cmp eax, ROWS*COLS
 	jl LINHANROWS
 
+     mov buffer[(15*COLS) * CHAR_INFO].Char, '0'
+	mov buffer[(15 * COLS) * CHAR_INFO].Attributes, 6Bh
+
+
     ret
 ClearBuffer ENDP
 
@@ -99,6 +104,7 @@ CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD
     add eax, bufx
     mov dx, char
     mov buffer[eax * CHAR_INFO].Char, dx
+    mov buffer[eax * CHAR_INFO].Attributes, 64h
     ret
 CharToBuffer ENDP
 

@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/23/19 23:07:53
+Microsoft (R) Macro Assembler Version 14.16.27030.1	    06/24/19 10:22:48
 Animation exampl					     Page 1 - 1
 
 
@@ -32,6 +32,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/23/19 23:07:53
  00000004			CHAR_INFO STRUCT
  00000000  0000				Char          CHARTYPE <>
  00000002  0000				Attributes    WORD ?
+
 				CHAR_INFO ENDS
 
  = WriteConsoleOutputA		WriteConsoleOutput EQU <WriteConsoleOutputA>
@@ -47,11 +48,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/23/19 23:07:53
  00000000			.data
  = 00000078				COLS = 120; number of columns;//Quantidade de colunas do mapa
  = 0000001E				ROWS = 30; number of rows;//Quantidade de linhas do mapa
- = 0000000F				CHAR_ATTRIBUTE = 0Fh;//Cor dos elementos do buffer
+ = 0000006F				CHAR_ATTRIBUTE = 6Fh;//Cor dos elementos do buffer
 
  00000000 00000000		    console HANDLE 0
  00000004  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<< '-' > , CHAR_ATTRIBUTE > )
-	    002D 000F
+	    002D 006F
 	   ]
  00003844 0078 001E		    bufferSize COORD <COLS, ROWS>
  00003848 0000 0000		    bufferCoord COORD <0, 0>
@@ -75,7 +76,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/23/19 23:07:53
  0000000C  B9 000003E8		    mov ecx, 1000; draw 70 frames
  00000011			ANIMATION :
  00000011  51			    push ecx
- 00000012  E8 000000AD		    call RenderScene
+ 00000012  E8 000000C9		    call RenderScene
 				    invoke WriteConsoleOutput, console,
 				    ADDR buffer, bufferSize, bufferCoord, ADDR region
  00000017  68 0000384C R   *	    push   OFFSET region
@@ -136,112 +137,123 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/23/19 23:07:53
  00000096  3D 00000E10			cmp eax, ROWS*COLS
  0000009B  7C EE			jl LINHANROWS
 
+ 0000009D  66| C7 05		     mov buffer[(15*COLS) * CHAR_INFO].Char, '0'
+	   00001C24 R
+	   0030
+ 000000A6  66| C7 05			mov buffer[(15 * COLS) * CHAR_INFO].Attributes, 6Bh
+	   00001C26 R
+	   006B
+
+
 				    ret
- 0000009D  59		   *	    pop    ecx
- 0000009E  58		   *	    pop    eax
- 0000009F  C3		   *	    ret    00000h
- 000000A0			ClearBuffer ENDP
+ 000000AF  59		   *	    pop    ecx
+ 000000B0  58		   *	    pop    eax
+ 000000B1  C3		   *	    ret    00000h
+ 000000B2			ClearBuffer ENDP
 
 
- 000000A0			CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD
- 000000A0  55		   *	    push   ebp
- 000000A1  8B EC	   *	    mov    ebp, esp
- 000000A3  50		   *	    push   eax
- 000000A4  52		   *	    push   edx
- 000000A5  8B 45 0C		    mov eax, bufy
- 000000A8  BA 00000078		    mov edx, COLS
- 000000AD  F7 E2		    mul edx
- 000000AF  03 45 08		    add eax, bufx
- 000000B2  66| 8B 55 10		    mov dx, char
- 000000B6  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Char, dx
+ 000000B2			CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD
+ 000000B2  55		   *	    push   ebp
+ 000000B3  8B EC	   *	    mov    ebp, esp
+ 000000B5  50		   *	    push   eax
+ 000000B6  52		   *	    push   edx
+ 000000B7  8B 45 0C		    mov eax, bufy
+ 000000BA  BA 00000078		    mov edx, COLS
+ 000000BF  F7 E2		    mul edx
+ 000000C1  03 45 08		    add eax, bufx
+ 000000C4  66| 8B 55 10		    mov dx, char
+ 000000C8  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Char, dx
 	   00000004 R
+ 000000D0  66| C7 04 85		    mov buffer[eax * CHAR_INFO].Attributes, 64h
+	   00000006 R
+	   0064
 				    ret
- 000000BE  5A		   *	    pop    edx
- 000000BF  58		   *	    pop    eax
- 000000C0  C9		   *	    leave  
- 000000C1  C2 000C	   *	    ret    0000Ch
- 000000C4			CharToBuffer ENDP
+ 000000DA  5A		   *	    pop    edx
+ 000000DB  58		   *	    pop    eax
+ 000000DC  C9		   *	    leave  
+ 000000DD  C2 000C	   *	    ret    0000Ch
+ 000000E0			CharToBuffer ENDP
 
 
- 000000C4			RenderScene PROC USES eax edx ecx
- 000000C4  50		   *	    push   eax
- 000000C5  52		   *	    push   edx
- 000000C6  51		   *	    push   ecx
- 000000C7  E8 FFFFFF7D		    CALL ClearBuffer
+ 000000E0			RenderScene PROC USES eax edx ecx
+ 000000E0  50		   *	    push   eax
+ 000000E1  52		   *	    push   edx
+ 000000E2  51		   *	    push   ecx
+ 000000E3  E8 FFFFFF61		    CALL ClearBuffer
 
- 000000CC  8B 15 00003858 R	    mov edx, y
- 000000D2  A1 00003854 R	    mov eax, x
+ 000000E8  8B 15 00003858 R	    mov edx, y
+ 000000EE  A1 00003854 R	    mov eax, x
 
 				    INVOKE CharToBuffer, eax, edx, character
- 000000D7  83 EC 02	   *	    sub    esp, 002h
- 000000DA  66| FF 35
+ 000000F3  83 EC 02	   *	    sub    esp, 002h
+ 000000F6  66| FF 35
 	   0000385C R	   *	    push   character
- 000000E1  52		   *	    push   edx
- 000000E2  50		   *	    push   eax
- 000000E3  E8 FFFFFFB8	   *	    call   CharToBuffer
+ 000000FD  52		   *	    push   edx
+ 000000FE  50		   *	    push   eax
+ 000000FF  E8 FFFFFFAE	   *	    call   CharToBuffer
 
- 000000E8  B8 00000032			mov eax, 50
- 000000ED  E8 00000000 E		call Delay
- 000000F2  E8 00000000 E		call ReadKey
- 000000F7  74 42			jz RESUME
+ 00000104  B8 00000032			mov eax, 50
+ 00000109  E8 00000000 E		call Delay
+ 0000010E  E8 00000000 E		call ReadKey
+ 00000113  74 42			jz RESUME
 
- 000000F9  80 FC 50			cmp ah, 50h;//CIMA
- 000000FC  74 30			jz INCREMENTO_Y
- 000000FE  80 FC 48			cmp ah, 48h
- 00000101  74 0C			jz DECREMENTO_Y;//BAIXO
- 00000103  80 FC 4D			cmp ah, 4Dh
- 00000106  74 1E			jz INCREMENTO_X
- 00000108  80 FC 4B			cmp ah, 4Bh
- 0000010B  74 11			jz DECREMENTO_X
- 0000010D  EB 2C			jmp RESUME
+ 00000115  80 FC 50			cmp ah, 50h;//CIMA
+ 00000118  74 30			jz INCREMENTO_Y
+ 0000011A  80 FC 48			cmp ah, 48h
+ 0000011D  74 0C			jz DECREMENTO_Y;//BAIXO
+ 0000011F  80 FC 4D			cmp ah, 4Dh
+ 00000122  74 1E			jz INCREMENTO_X
+ 00000124  80 FC 4B			cmp ah, 4Bh
+ 00000127  74 11			jz DECREMENTO_X
+ 00000129  EB 2C			jmp RESUME
 
- 0000010F			DECREMENTO_Y:
- 0000010F  FF 0D 00003858 R	    dec y;
- 00000115  83 3D 00003858 R	    cmp y, 0d
+ 0000012B			DECREMENTO_Y:
+ 0000012B  FF 0D 00003858 R	    dec y;
+ 00000131  83 3D 00003858 R	    cmp y, 0d
 	   00
- 0000011C  EB 1D		    jmp RESUME
+ 00000138  EB 1D		    jmp RESUME
 
- 0000011E			DECREMENTO_X :
- 0000011E  FF 0D 00003854 R		dec x;
- 00000124  EB 15			jmp RESUME
+ 0000013A			DECREMENTO_X :
+ 0000013A  FF 0D 00003854 R		dec x;
+ 00000140  EB 15			jmp RESUME
 
- 00000126			INCREMENTO_X :
- 00000126  FF 05 00003854 R		inc x
- 0000012C  EB 0D			jmp RESUME
+ 00000142			INCREMENTO_X :
+ 00000142  FF 05 00003854 R		inc x
+ 00000148  EB 0D			jmp RESUME
 
- 0000012E			INCREMENTO_Y:
- 0000012E  FF 05 00003858 R	    inc y
- 00000134  83 3D 00003858 R	    cmp y, 29d
+ 0000014A			INCREMENTO_Y:
+ 0000014A  FF 05 00003858 R	    inc y
+ 00000150  83 3D 00003858 R	    cmp y, 29d
 	   1D
 
- 0000013B			RESUME:
+ 00000157			RESUME:
 				    ;inc character; change fill character for the next frame
 
 				    ret
- 0000013B  59		   *	    pop    ecx
- 0000013C  5A		   *	    pop    edx
- 0000013D  58		   *	    pop    eax
- 0000013E  C3		   *	    ret    00000h
+ 00000157  59		   *	    pop    ecx
+ 00000158  5A		   *	    pop    edx
+ 00000159  58		   *	    pop    eax
+ 0000015A  C3		   *	    ret    00000h
 
- 0000013F			SWITCH:
- 0000013F  80 3D 0000385E R	    cmp CONTROLE, 0
+ 0000015B			SWITCH:
+ 0000015B  80 3D 0000385E R	    cmp CONTROLE, 0
 	   00
- 00000146  74 02		    je RECEBE_1
- 00000148  EB 09		    jmp RECEBE_0
- 0000014A			RECEBE_1: 
- 0000014A  C6 05 0000385E R	    mov CONTROLE, 1
+ 00000162  74 02		    je RECEBE_1
+ 00000164  EB 09		    jmp RECEBE_0
+ 00000166			RECEBE_1: 
+ 00000166  C6 05 0000385E R	    mov CONTROLE, 1
 	   01
- 00000151  EB E8		    jmp RESUME
- 00000153			RECEBE_0:
- 00000153  C6 05 0000385E R	    mov CONTROLE, 0
+ 0000016D  EB E8		    jmp RESUME
+ 0000016F			RECEBE_0:
+ 0000016F  C6 05 0000385E R	    mov CONTROLE, 0
 	   00
- 0000015A  EB DF		    jmp RESUME
+ 00000176  EB DF		    jmp RESUME
 
 
- 0000015C			    RenderScene ENDP
+ 00000178			    RenderScene ENDP
 
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/23/19 23:07:53
+Microsoft (R) Macro Assembler Version 14.16.27030.1	    06/24/19 10:22:48
 Animation exampl					     Symbols 2 - 1
 
 
@@ -342,18 +354,18 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 0000385F Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000015C Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000178 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-CharToBuffer . . . . . . . . . .	P Near	 000000A0 _TEXT	Length= 00000024 Public STDCALL
+CharToBuffer . . . . . . . . . .	P Near	 000000B2 _TEXT	Length= 0000002E Public STDCALL
   bufx . . . . . . . . . . . . .	DWord	 bp + 00000008
   bufy . . . . . . . . . . . . .	DWord	 bp + 0000000C
   char . . . . . . . . . . . . .	Word	 bp + 00000010
-ClearBuffer  . . . . . . . . . .	P Near	 00000049 _TEXT	Length= 00000057 Public STDCALL
+ClearBuffer  . . . . . . . . . .	P Near	 00000049 _TEXT	Length= 00000069 Public STDCALL
   LINHA1 . . . . . . . . . . . .	L Near	 0000004D _TEXT	
   VAZIOS . . . . . . . . . . . .	L Near	 0000005D _TEXT	
   VAZIOSM  . . . . . . . . . . .	L Near	 0000006C _TEXT	
@@ -421,15 +433,15 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-RenderScene  . . . . . . . . . .	P Near	 000000C4 _TEXT	Length= 00000098 Public STDCALL
-  DECREMENTO_Y . . . . . . . . .	L Near	 0000010F _TEXT	
-  DECREMENTO_X . . . . . . . . .	L Near	 0000011E _TEXT	
-  INCREMENTO_X . . . . . . . . .	L Near	 00000126 _TEXT	
-  INCREMENTO_Y . . . . . . . . .	L Near	 0000012E _TEXT	
-  RESUME . . . . . . . . . . . .	L Near	 0000013B _TEXT	
-  SWITCH . . . . . . . . . . . .	L Near	 0000013F _TEXT	
-  RECEBE_1 . . . . . . . . . . .	L Near	 0000014A _TEXT	
-  RECEBE_0 . . . . . . . . . . .	L Near	 00000153 _TEXT	
+RenderScene  . . . . . . . . . .	P Near	 000000E0 _TEXT	Length= 00000098 Public STDCALL
+  DECREMENTO_Y . . . . . . . . .	L Near	 0000012B _TEXT	
+  DECREMENTO_X . . . . . . . . .	L Near	 0000013A _TEXT	
+  INCREMENTO_X . . . . . . . . .	L Near	 00000142 _TEXT	
+  INCREMENTO_Y . . . . . . . . .	L Near	 0000014A _TEXT	
+  RESUME . . . . . . . . . . . .	L Near	 00000157 _TEXT	
+  SWITCH . . . . . . . . . . . .	L Near	 0000015B _TEXT	
+  RECEBE_1 . . . . . . . . . . .	L Near	 00000166 _TEXT	
+  RECEBE_0 . . . . . . . . . . .	L Near	 0000016F _TEXT	
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -490,7 +502,7 @@ Symbols:
 @stack . . . . . . . . . . . . .	Text   	 FLAT
 ALT_MASK . . . . . . . . . . . .	Number	 00000003h   
 CAPSLOCK_ON  . . . . . . . . . .	Number	 00000080h   
-CHAR_ATTRIBUTE . . . . . . . . .	Number	 0000000Fh   
+CHAR_ATTRIBUTE . . . . . . . . .	Number	 0000006Fh   
 COLS . . . . . . . . . . . . . .	Number	 00000078h   
 CONTROLE . . . . . . . . . . . .	Byte	 0000385E _DATA	
 CREATE_ALWAYS  . . . . . . . . .	Number	 00000002h   
