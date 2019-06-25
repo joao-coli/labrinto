@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/24/19 22:52:52
+Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/25/19 00:35:04
 Animation exampl					     Page 1 - 1
 
 
@@ -34,11 +34,10 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/24/19 22:52:52
  00000002  0000				Attributes    WORD ?
 				CHAR_INFO ENDS
 
- 0000000D			OBSTACULO_FASE STRUCT
- 00000000  0000 0000			Base		  CHAR_INFO <>
- 00000004  00				Movimento	  BYTE ? ;//0 estatico, 1 cima, 2 baixo, 3 direita, 4 esquerda
- 00000005  00000000			X			  DWORD ? ;//Posicao x
- 00000009  00000000			Y			  DWORD ? ;//Posicao y
+ 00000009			OBSTACULO_FASE STRUCT
+ 00000000  00				Movimento	  BYTE ? ;//0 estatico, 1 cima, 2 baixo, 3 direita, 4 esquerda
+ 00000001  00000000			X			  DWORD ? ;//Posicao x
+ 00000005  00000000			Y			  DWORD ? ;//Posicao y
 				OBSTACULO_FASE ENDS
 
  = WriteConsoleOutputA		WriteConsoleOutput EQU <WriteConsoleOutputA>
@@ -89,453 +88,497 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/24/19 22:52:52
  = 0000000F				INI_Y = 15
 
 
- 00000000 0023 006F 01			fase1 OBSTACULO_FASE <<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 1d, 5d, 15d>,
-	   00000005
-	   0000000F 0023
-	   006F 02
-	   00000006
-	   0000000F 0023
-	   006F 01
-	   00000007
-	   0000000F 0023
-	   006F 02
-	   00000008
+ 00000000 01 00000005			fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
+	   0000000F 02
+	   0000000D
+	   0000000F 01
 	   0000000F
-						<<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 2d, 6d, 15d>,
-						<<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 1d, 7d, 15d>,
-						<<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 2d, 8d, 15d>
+	   0000000F 02
+	   00000015
+	   0000000F 01
+	   00000019
+	   0000000F 02
+	   00000021
+	   0000000F 01
+	   00000026
+	   0000000F 02
+	   00000028
+	   0000000F 02
+	   0000004D
+	   0000000F 01
+	   0000004B
+	   0000000F 02
+	   00000057
+	   0000000F 01
+	   00000059
+	   0000000F 02
+	   0000005F
+	   0000000F 01
+	   00000063
+	   0000000F 02
+	   00000067
+	   0000000F 01
+	   0000006E
+	   0000000F
+						<1d, 38d, 15d>, <2d, 40d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>, <2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>,
+						<1d, 99d, 15d>, <2d, 103d, 15d>, <1d, 110d, 15d>
+ 00000090 01 00000005			fase2 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 6d, 15d>, <1d, 7d, 15d>, <2d, 8d, 15d>, <1d, 9d, 15d>, <2d, 10d, 15d>,
+	   0000000F 02
+	   00000006
+	   0000000F 01
+	   00000007
+	   0000000F 02
+	   00000008
+	   0000000F 01
+	   00000009
+	   0000000F 02
+	   0000000A
+	   0000000F 01
+	   00000039
+	   00000008 02
+	   0000003A
+	   00000008 01
+	   0000003B
+	   00000008 02
+	   0000003C
+	   00000008 01
+	   0000003D
+	   00000008 02
+	   0000003E
+	   00000008 01
+	   00000069
+	   00000019 02
+	   0000006A
+	   00000019 01
+	   0000006B
+	   00000019 02
+	   0000006C
+	   00000019 01
+	   0000006D
+	   00000019 02
+	   0000006E
+	   00000019
+						<1d, 57d, 8d>, <2d, 58d, 8d>, <1d, 59d, 8d>, <2d, 60d, 8d>, <1d, 61d, 8d>, <2d, 62d, 8d>,
+						<1d, 105d, 25d>, <2d, 106d, 25d>, <1d, 107d, 25d>, <2d, 108d, 25d>, <1d, 109d, 25d>, <2d, 110d, 25d>
 
- 00000034 00000000		    console HANDLE 0
- 00000038  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
+ 00000132 00000000 R			fases DWORD OFFSET fase1, OFFSET fase2
+	   00000090 R
+
+ 0000013A 00000000		    console HANDLE 0
+ 0000013E  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
 	    0020 0060
 	   ]
- 00003878 0078 001E		    bufferSize COORD <COLS, ROWS>
- 0000387C 0000 0000		    bufferCoord COORD <0, 0>
- 00003880 0000 0000 0077	    region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
+ 0000397E 0078 001E		    bufferSize COORD <COLS, ROWS>
+ 00003982 0000 0000		    bufferCoord COORD <0, 0>
+ 00003986 0000 0000 0077	    region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
 	   001D
 
- 00003888 00000077		    x DWORD INI_X; current position
- 0000388C 0000000F		    y DWORD INI_Y; of the figure
- 00003890 00FE			    character WORD 0FEh ;//Personagem principal
+ 0000398E 00000077		    x DWORD INI_X; current position
+ 00003992 0000000F		    y DWORD INI_Y; of the figure
+ 00003996 00FE			    character WORD 0FEh ;//Personagem principal
 
  00000000			.code
  00000000			main PROC
 				    INVOKE GetStdHandle, STD_OUTPUT_HANDLE
  00000000  6A F5	   *	    push    -00000000Bh
  00000002  E8 00000000 E   *	    call   GetStdHandle
- 00000007  A3 00000034 R	    mov console, eax; save console handle
+ 00000007  A3 0000013A R	    mov console, eax; save console handle
 
  0000000C				ANIMATION:
- 0000000C  51			    push ecx
 				    invoke RenderScene, x, y
- 0000000D  FF 35 0000388C R *	    push   y
- 00000013  FF 35 00003888 R *	    push   x
- 00000019  E8 0000024A	   *	    call   RenderScene
+ 0000000C  FF 35 00003992 R *	    push   y
+ 00000012  FF 35 0000398E R *	    push   x
+ 00000018  E8 00000216	   *	    call   RenderScene
 					invoke MovimentaJogador, OFFSET x, OFFSET y
- 0000001E  68 0000388C R   *	    push   dword  ptr OFFSET FLAT: y
- 00000023  68 00003888 R   *	    push   dword  ptr OFFSET FLAT: x
- 00000028  E8 00000259	   *	    call   MovimentaJogador
+ 0000001D  68 00003992 R   *	    push   dword  ptr OFFSET FLAT: y
+ 00000022  68 0000398E R   *	    push   dword  ptr OFFSET FLAT: x
+ 00000027  E8 00000225	   *	    call   MovimentaJogador
 				    invoke ChecaColisao, x, y
- 0000002D  FF 35 0000388C R *	    push   y
- 00000033  FF 35 00003888 R *	    push   x
- 00000039  E8 0000029C	   *	    call   ChecaColisao
- 0000003E  83 F8 00		    cmp eax, 0
- 00000041  74 19		    jz CONTINUE
- 00000043  83 F8 01		    cmp eax, 1
- 00000046  EB 00		    jmp RESTART
+ 0000002C  FF 35 00003992 R *	    push   y
+ 00000032  FF 35 0000398E R *	    push   x
+ 00000038  E8 00000268	   *	    call   ChecaColisao
+ 0000003D  83 F8 00		    cmp eax, 0
+ 00000040  74 19		    jz CONTINUE
+ 00000042  83 F8 01		    cmp eax, 1
+ 00000045  EB 00		    jmp RESTART
 				    ;jmp PROXIMA_FASE
 
- 00000048				RESTART:
- 00000048  C7 05 00003888 R	    mov x, INI_X
+ 00000047				RESTART:
+ 00000047  C7 05 0000398E R	    mov x, INI_X
 	   00000077
- 00000052  C7 05 0000388C R	    mov y, INI_Y
+ 00000051  C7 05 00003992 R	    mov y, INI_Y
 	   0000000F
 
- 0000005C				CONTINUE:
+ 0000005B				CONTINUE:
 					INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM
- 0000005C  6A 64	   *	    push   +000000064h
- 0000005E  83 EC 02	   *	    sub    esp, 002h
- 00000061  66| FF 35
-	   00003890 R	   *	    push   character
- 00000068  FF 35 0000388C R *	    push   y
- 0000006E  FF 35 00003888 R *	    push   x
- 00000074  E8 000000CB	   *	    call   CharToBuffer
+ 0000005B  6A 64	   *	    push   +000000064h
+ 0000005D  83 EC 02	   *	    sub    esp, 002h
+ 00000060  66| FF 35
+	   00003996 R	   *	    push   character
+ 00000067  FF 35 00003992 R *	    push   y
+ 0000006D  FF 35 0000398E R *	    push   x
+ 00000073  E8 000000C3	   *	    call   CharToBuffer
 				    invoke WriteConsoleOutput, console,
 				    ADDR buffer, bufferSize, bufferCoord, ADDR region
- 00000079  68 00003880 R   *	    push   OFFSET region
- 0000007E  FF 35 0000387C R *	    push   dword  ptr bufferCoord
- 00000084  FF 35 00003878 R *	    push   dword  ptr bufferSize
- 0000008A  68 00000038 R   *	    push   OFFSET buffer
- 0000008F  FF 35 00000034 R *	    push   console
- 00000095  E8 00000000 E   *	    call   WriteConsoleOutputA
-				    INVOKE Sleep, 10; delay between frames
- 0000009A  6A 0A	   *	    push   +00000000Ah
- 0000009C  E8 00000000 E   *	    call   Sleep
- 000000A1  59			    pop ecx
- 000000A2  E9 FFFFFF65		    jmp ANIMATION
+ 00000078  68 00003986 R   *	    push   OFFSET region
+ 0000007D  FF 35 00003982 R *	    push   dword  ptr bufferCoord
+ 00000083  FF 35 0000397E R *	    push   dword  ptr bufferSize
+ 00000089  68 0000013E R   *	    push   OFFSET buffer
+ 0000008E  FF 35 0000013A R *	    push   console
+ 00000094  E8 00000000 E   *	    call   WriteConsoleOutputA
+ 00000099  E9 FFFFFF6E		    jmp ANIMATION
 
 				exit
- 000000A7  6A 00	   *	    push   +000000000h
- 000000A9  E8 00000000 E   *	    call   ExitProcess
- 000000AE			main ENDP
+ 0000009E  6A 00	   *	    push   +000000000h
+ 000000A0  E8 00000000 E   *	    call   ExitProcess
+ 000000A5			main ENDP
 
 
- 000000AE			ClearBuffer PROC USES eax ecx edx
- 000000AE  50		   *	    push   eax
- 000000AF  51		   *	    push   ecx
- 000000B0  52		   *	    push   edx
- 000000B1  33 C0		    xor eax, eax	;//EAX = 0
+ 000000A5			ClearBuffer PROC USES eax ecx edx
+ 000000A5  50		   *	    push   eax
+ 000000A6  51		   *	    push   ecx
+ 000000A7  52		   *	    push   edx
+ 000000A8  33 C0		    xor eax, eax	;//EAX = 0
 
- 000000B3				LINHA1:
- 000000B3  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	   00000038 R
+ 000000AA				LINHA1:
+ 000000AA  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
+	   0000013E R
 	   0023
- 000000BD  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
-	   0000003A R
+ 000000B4  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	   00000140 R
 	   006F
- 000000C7  40				inc eax
- 000000C8  83 F8 78			cmp eax, COLS
- 000000CB  7C E6			jl LINHA1
+ 000000BE  40				inc eax
+ 000000BF  83 F8 78			cmp eax, COLS
+ 000000C2  7C E6			jl LINHA1
 
- 000000CD				COLUNAS:
- 000000CD  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	   00000038 R
+ 000000C4				COLUNAS:
+ 000000C4  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
+	   0000013E R
 	   0023
- 000000D7  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
-	   0000003A R
+ 000000CE  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	   00000140 R
 	   006F
- 000000E1  83 C0 77			add eax, COLS-1
- 000000E4  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	   00000038 R
+ 000000D8  83 C0 77			add eax, COLS-1
+ 000000DB  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
+	   0000013E R
 	   0023
- 000000EE  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
-	   0000003A R
+ 000000E5  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	   00000140 R
 	   006F
- 000000F8  40				inc eax
- 000000F9  3D 00000D5E			cmp eax, (ROWS - 1)*(COLS - 2)
- 000000FE  7C CD			jl COLUNAS
+ 000000EF  40				inc eax
+ 000000F0  3D 00000D5E			cmp eax, (ROWS - 1)*(COLS - 2)
+ 000000F5  7C CD			jl COLUNAS
 
- 00000100				LINHANROWS:
- 00000100  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	   00000038 R
+ 000000F7				LINHANROWS:
+ 000000F7  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
+	   0000013E R
 	   0023
- 0000010A  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
-	   0000003A R
+ 00000101  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	   00000140 R
 	   006F
- 00000114  40				inc eax
- 00000115  3D 00000E10			cmp eax, ROWS*COLS
- 0000011A  7C E4			jl LINHANROWS
+ 0000010B  40				inc eax
+ 0000010C  3D 00000E10			cmp eax, ROWS*COLS
+ 00000111  7C E4			jl LINHANROWS
 
 					;//Bloco do objetivo
- 0000011C  66| C7 05			mov buffer[(15 * COLS) * CHAR_INFO].Char, ELEMENTO_OBJETIVO
-	   00001C58 R
+ 00000113  66| C7 05			mov buffer[(15 * COLS) * CHAR_INFO].Char, ELEMENTO_OBJETIVO
+	   00001D5E R
 	   004F
- 00000125  66| C7 05				mov buffer[(15 * COLS) * CHAR_INFO].Attributes, COR_OBJETIVO
-	   00001C5A R
+ 0000011C  66| C7 05				mov buffer[(15 * COLS) * CHAR_INFO].Attributes, COR_OBJETIVO
+	   00001D60 R
 	   006B
 
 					;//Remove o obstáculo da posição inicial
- 0000012E  66| C7 05			mov buffer[(16 * COLS - 1) * CHAR_INFO].Char, ELEMENTO_FUNDO
-	   00001E34 R
+ 00000125  66| C7 05			mov buffer[(16 * COLS - 1) * CHAR_INFO].Char, ELEMENTO_FUNDO
+	   00001F3A R
 	   0020
- 00000137  66| C7 05			mov buffer[(16 * COLS - 1) * CHAR_INFO].Attributes, COR_FUNDO
-	   00001E36 R
+ 0000012E  66| C7 05			mov buffer[(16 * COLS - 1) * CHAR_INFO].Attributes, COR_FUNDO
+	   00001F3C R
 	   0060
 
 
 				    ret
- 00000140  5A		   *	    pop    edx
- 00000141  59		   *	    pop    ecx
- 00000142  58		   *	    pop    eax
- 00000143  C3		   *	    ret    00000h
- 00000144			ClearBuffer ENDP
+ 00000137  5A		   *	    pop    edx
+ 00000138  59		   *	    pop    ecx
+ 00000139  58		   *	    pop    eax
+ 0000013A  C3		   *	    ret    00000h
+ 0000013B			ClearBuffer ENDP
 
 
- 00000144			CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD, cor: WORD
- 00000144  55		   *	    push   ebp
- 00000145  8B EC	   *	    mov    ebp, esp
- 00000147  50		   *	    push   eax
- 00000148  52		   *	    push   edx
- 00000149  8B 45 0C		    mov eax, bufy
- 0000014C  BA 00000078		    mov edx, COLS
- 00000151  F7 E2		    mul edx
- 00000153  03 45 08		    add eax, bufx
- 00000156  66| 8B 55 10		    mov dx, char
- 0000015A  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Char, dx
-	   00000038 R
- 00000162  66| 8B 55 14			mov dx, cor
- 00000166  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Attributes, dx
-	   0000003A R
+ 0000013B			CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD, cor: WORD
+ 0000013B  55		   *	    push   ebp
+ 0000013C  8B EC	   *	    mov    ebp, esp
+ 0000013E  50		   *	    push   eax
+ 0000013F  52		   *	    push   edx
+ 00000140  8B 45 0C		    mov eax, bufy
+ 00000143  BA 00000078		    mov edx, COLS
+ 00000148  F7 E2		    mul edx
+ 0000014A  03 45 08		    add eax, bufx
+ 0000014D  66| 8B 55 10		    mov dx, char
+ 00000151  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Char, dx
+	   0000013E R
+ 00000159  66| 8B 55 14			mov dx, cor
+ 0000015D  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Attributes, dx
+	   00000140 R
 				    ret
- 0000016E  5A		   *	    pop    edx
- 0000016F  58		   *	    pop    eax
- 00000170  C9		   *	    leave  
- 00000171  C2 0010	   *	    ret    00010h
- 00000174			CharToBuffer ENDP
+ 00000165  5A		   *	    pop    edx
+ 00000166  58		   *	    pop    eax
+ 00000167  C9		   *	    leave  
+ 00000168  C2 0010	   *	    ret    00010h
+ 0000016B			CharToBuffer ENDP
 
- 00000174			AtualizaFase PROC USES eax ecx edx pFase: DWORD, cFase: WORD
- 00000174  55		   *	    push   ebp
- 00000175  8B EC	   *	    mov    ebp, esp
- 00000177  50		   *	    push   eax
- 00000178  51		   *	    push   ecx
- 00000179  52		   *	    push   edx
- 0000017A  8B 45 08			mov eax, pFase
- 0000017D  8B 4D 0C			mov ecx, DWORD PTR cFase
+ 0000016B			AtualizaFase PROC USES eax ecx edx pFase: DWORD, cFase: WORD
+ 0000016B  55		   *	    push   ebp
+ 0000016C  8B EC	   *	    mov    ebp, esp
+ 0000016E  50		   *	    push   eax
+ 0000016F  51		   *	    push   ecx
+ 00000170  52		   *	    push   edx
+ 00000171  8B 45 08			mov eax, pFase
+ 00000174  8B 4D 0C			mov ecx, DWORD PTR cFase
 
- 00000180				ATUALIZACAO:
+ 00000177				ATUALIZACAO:
 					INVOKE CharToBuffer, DWORD PTR (OBSTACULO_FASE PTR [eax]).X, DWORD PTR (OBSTACULO_FASE PTR [eax]).Y, ELEMENTO_FUNDO, COR_FUNDO ;//Limpa a posição antiga
- 00000180  6A 60	   *	    push   +000000060h
- 00000182  6A 20	   *	    push   +000000020h
- 00000184  FF 70 09	   *	    push   dword  ptr [eax]+000000009h
- 00000187  FF 70 05	   *	    push   dword  ptr [eax]+000000005h
- 0000018A  E8 FFFFFFB5	   *	    call   CharToBuffer
+ 00000177  6A 60	   *	    push   +000000060h
+ 00000179  6A 20	   *	    push   +000000020h
+ 0000017B  FF 70 05	   *	    push   dword  ptr [eax]+000000005h
+ 0000017E  FF 70 01	   *	    push   dword  ptr [eax]+000000001h
+ 00000181  E8 FFFFFFB5	   *	    call   CharToBuffer
 					INVOKE AtualizaObstaculo, eax ;//Atualiza a posição do obstáculo
- 0000018F  50		   *	    push   eax
- 00000190  E8 0000001B	   *	    call   AtualizaObstaculo
+ 00000186  50		   *	    push   eax
+ 00000187  E8 0000001B	   *	    call   AtualizaObstaculo
 					INVOKE CharToBuffer, (OBSTACULO_FASE PTR [eax]).X, DWORD PTR (OBSTACULO_FASE PTR [eax]).Y, ELEMENTO_OBSTACULO, COR_OBSTACULO
- 00000195  6A 6F	   *	    push   +00000006Fh
- 00000197  6A 23	   *	    push   +000000023h
- 00000199  FF 70 09	   *	    push   dword  ptr [eax]+000000009h
- 0000019C  FF 70 05	   *	    push   dword  ptr [eax]+000000005h
- 0000019F  E8 FFFFFFA0	   *	    call   CharToBuffer
- 000001A4  83 C0 0D			add eax, TYPE OBSTACULO_FASE
- 000001A7  E2 D7			loop ATUALIZACAO
+ 0000018C  6A 6F	   *	    push   +00000006Fh
+ 0000018E  6A 23	   *	    push   +000000023h
+ 00000190  FF 70 05	   *	    push   dword  ptr [eax]+000000005h
+ 00000193  FF 70 01	   *	    push   dword  ptr [eax]+000000001h
+ 00000196  E8 FFFFFFA0	   *	    call   CharToBuffer
+ 0000019B  83 C0 09			add eax, TYPE OBSTACULO_FASE
+ 0000019E  E2 D7			loop ATUALIZACAO
 
 					ret
- 000001A9  5A		   *	    pop    edx
- 000001AA  59		   *	    pop    ecx
- 000001AB  58		   *	    pop    eax
- 000001AC  C9		   *	    leave  
- 000001AD  C2 0008	   *	    ret    00008h
- 000001B0			AtualizaFase ENDP
+ 000001A0  5A		   *	    pop    edx
+ 000001A1  59		   *	    pop    ecx
+ 000001A2  58		   *	    pop    eax
+ 000001A3  C9		   *	    leave  
+ 000001A4  C2 0008	   *	    ret    00008h
+ 000001A7			AtualizaFase ENDP
 
- 000001B0			AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
+ 000001A7			AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
 
- 000001B0  55		   *	    push   ebp
- 000001B1  8B EC	   *	    mov    ebp, esp
- 000001B3  50		   *	    push   eax
- 000001B4  52		   *	    push   edx
- 000001B5  51		   *	    push   ecx
- 000001B6  53		   *	    push   ebx
- 000001B7  56		   *	    push   esi
- 000001B8  8B 55 08			mov edx, pObstaculo
- 000001BB  0F B6 72 04			movzx esi, BYTE PTR (OBSTACULO_FASE PTR [edx]).Movimento
- 000001BF  83 FE 00			cmp esi, 0
- 000001C2  74 14			jz case0
- 000001C4  83 FE 01			cmp esi, 1
- 000001C7  74 14			jz case1
- 000001C9  83 FE 02			cmp esi, 2
- 000001CC  74 30			jz case2
- 000001CE  83 FE 03			cmp esi, 3
- 000001D1  74 4C			jz case3
- 000001D3  83 FE 04			cmp esi, 4
- 000001D6  74 68			jz case4
+ 000001A7  55		   *	    push   ebp
+ 000001A8  8B EC	   *	    mov    ebp, esp
+ 000001AA  50		   *	    push   eax
+ 000001AB  52		   *	    push   edx
+ 000001AC  51		   *	    push   ecx
+ 000001AD  53		   *	    push   ebx
+ 000001AE  56		   *	    push   esi
+ 000001AF  8B 55 08			mov edx, pObstaculo
 
- 000001D8				case0:
- 000001D8  E9 00000082			jmp FIM
+ 000001B2  8B 5A 01			mov ebx, DWORD PTR(OBSTACULO_FASE PTR[edx]).X
+ 000001B5  8B 4A 05			mov ecx, DWORD PTR(OBSTACULO_FASE PTR[edx]).Y
+ 000001B8  0F B6 32			movzx esi, BYTE PTR (OBSTACULO_FASE PTR [edx]).Movimento
+ 000001BB  83 FE 00			cmp esi, 0
+ 000001BE  74 14			jz case0
+ 000001C0  83 FE 01			cmp esi, 1
+ 000001C3  74 11			jz case1
+ 000001C5  83 FE 02			cmp esi, 2
+ 000001C8  74 20			jz case2
+ 000001CA  83 FE 03			cmp esi, 3
+ 000001CD  74 2F			jz case3
+ 000001CF  83 FE 04			cmp esi, 4
+ 000001D2  74 3E			jz case4
 
- 000001DD				case1:
- 000001DD  8B 5A 05			mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
- 000001E0  8B 4A 09			mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
- 000001E3  41				inc ecx
+
+ 000001D4				case0:
+ 000001D4  EB 4E			jmp FIM
+
+ 000001D6				case1:
+ 000001D6  41				inc ecx
 					INVOKE ChecaColisao, ebx, ecx
- 000001E4  51		   *	    push   ecx
- 000001E5  53		   *	    push   ebx
- 000001E6  E8 000000EF	   *	    call   ChecaColisao
- 000001EB  83 F8 00			cmp eax, 0
- 000001EE  75 08			jnz INVERTEY
+ 000001D7  51		   *	    push   ecx
+ 000001D8  53		   *	    push   ebx
+ 000001D9  E8 000000C7	   *	    call   ChecaColisao
+ 000001DE  83 F8 00			cmp eax, 0
+ 000001E1  75 02			jnz INVERTEY
 
- 000001F0  89 5A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
- 000001F3  89 4A 09			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
- 000001F6  EB 67			jmp FIM
+ 000001E3  EB 3F			jmp FIM
 
- 000001F8				INVERTEY:
- 000001F8  C6 42 04 02			mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 02h
- 000001FC  EB 61			jmp FIM
+ 000001E5					INVERTEY:
+ 000001E5  C6 02 02				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 02h
+ 000001E8  EB 3A				jmp FIM
 
- 000001FE				case2:
- 000001FE  8B 5A 05			mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
- 00000201  8B 4A 09			mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
- 00000204  49				dec ecx
+ 000001EA				case2:
+ 000001EA  49				dec ecx
 					INVOKE ChecaColisao, ebx, ecx
- 00000205  51		   *	    push   ecx
- 00000206  53		   *	    push   ebx
- 00000207  E8 000000CE	   *	    call   ChecaColisao
- 0000020C  83 F8 00			cmp eax, 0
- 0000020F  75 08			jnz INVERTEY2
+ 000001EB  51		   *	    push   ecx
+ 000001EC  53		   *	    push   ebx
+ 000001ED  E8 000000B3	   *	    call   ChecaColisao
+ 000001F2  83 F8 00			cmp eax, 0
+ 000001F5  75 02			jnz INVERTEY2
 
- 00000211  89 5A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
- 00000214  89 4A 09			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
- 00000217  EB 46			jmp FIM
+ 000001F7  EB 2B			jmp FIM
 
- 00000219				INVERTEY2:
- 00000219  C6 42 04 01			mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 01h
- 0000021D  EB 40			jmp FIM
+ 000001F9					INVERTEY2:
+ 000001F9  C6 02 01				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 01h
+ 000001FC  EB 26				jmp FIM
 
- 0000021F				case3:
- 0000021F  8B 5A 05			mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
- 00000222  8B 4A 09			mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
- 00000225  43				inc ebx
+ 000001FE				case3:
+ 000001FE  43				inc ebx
 					INVOKE ChecaColisao, ebx, ecx
- 00000226  51		   *	    push   ecx
- 00000227  53		   *	    push   ebx
- 00000228  E8 000000AD	   *	    call   ChecaColisao
- 0000022D  83 F8 00			cmp eax, 0
- 00000230  75 08			jnz INVERTEX
+ 000001FF  51		   *	    push   ecx
+ 00000200  53		   *	    push   ebx
+ 00000201  E8 0000009F	   *	    call   ChecaColisao
+ 00000206  83 F8 00			cmp eax, 0
+ 00000209  75 02			jnz INVERTEX
 
- 00000232  89 5A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
- 00000235  89 4A 09			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
- 00000238  EB 25			jmp FIM
+ 0000020B  EB 17			jmp FIM
 
- 0000023A				INVERTEX:
- 0000023A  C6 42 04 04			mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 04h
- 0000023E  EB 1F			jmp FIM
+ 0000020D					INVERTEX:
+ 0000020D  C6 02 04				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 04h
+ 00000210  EB 12				jmp FIM
 
- 00000240				case4:
- 00000240  8B 5A 05			mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
- 00000243  8B 4A 09			mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
- 00000246  4B				dec ebx
+ 00000212				case4:
+ 00000212  4B				dec ebx
 					INVOKE ChecaColisao, ebx, ecx
- 00000247  51		   *	    push   ecx
- 00000248  53		   *	    push   ebx
- 00000249  E8 0000008C	   *	    call   ChecaColisao
- 0000024E  83 F8 00			cmp eax, 0
- 00000251  75 08			jnz INVERTEX2
+ 00000213  51		   *	    push   ecx
+ 00000214  53		   *	    push   ebx
+ 00000215  E8 0000008B	   *	    call   ChecaColisao
+ 0000021A  83 F8 00			cmp eax, 0
+ 0000021D  75 02			jnz INVERTEX2
 
- 00000253  89 5A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
- 00000256  89 4A 09			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
- 00000259  EB 04			jmp FIM
+ 0000021F  EB 03			jmp FIM
 
- 0000025B				INVERTEX2:
- 0000025B  C6 42 04 03			mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 03h
+ 00000221					INVERTEX2:
+ 00000221  C6 02 03				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 03h
 
 
- 0000025F				FIM:
+ 00000224				FIM:
+ 00000224  89 5A 01			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
+ 00000227  89 4A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 					ret
- 0000025F  5E		   *	    pop    esi
- 00000260  5B		   *	    pop    ebx
- 00000261  59		   *	    pop    ecx
- 00000262  5A		   *	    pop    edx
- 00000263  58		   *	    pop    eax
- 00000264  C9		   *	    leave  
- 00000265  C2 0004	   *	    ret    00004h
- 00000268			AtualizaObstaculo ENDP
+ 0000022A  5E		   *	    pop    esi
+ 0000022B  5B		   *	    pop    ebx
+ 0000022C  59		   *	    pop    ecx
+ 0000022D  5A		   *	    pop    edx
+ 0000022E  58		   *	    pop    eax
+ 0000022F  C9		   *	    leave  
+ 00000230  C2 0004	   *	    ret    00004h
+ 00000233			AtualizaObstaculo ENDP
 
- 00000268			RenderScene PROC USES eax edx ecx posx: DWORD, posy: DWORD
- 00000268  55		   *	    push   ebp
- 00000269  8B EC	   *	    mov    ebp, esp
- 0000026B  50		   *	    push   eax
- 0000026C  52		   *	    push   edx
- 0000026D  51		   *	    push   ecx
- 0000026E  E8 FFFFFE3B		    call ClearBuffer ;//Grid padrão do mapa
-					INVOKE AtualizaFase, OFFSET fase1, LENGTHOF fase1
- 00000273  6A 04	   *	    push   +000000004h
- 00000275  68 00000000 R   *	    push   dword  ptr OFFSET FLAT: fase1
- 0000027A  E8 FFFFFEF5	   *	    call   AtualizaFase
+ 00000233			RenderScene PROC USES eax edx ecx posx: DWORD, posy: DWORD
+ 00000233  55		   *	    push   ebp
+ 00000234  8B EC	   *	    mov    ebp, esp
+ 00000236  50		   *	    push   eax
+ 00000237  52		   *	    push   edx
+ 00000238  51		   *	    push   ecx
+ 00000239  E8 FFFFFE67		    call ClearBuffer ;//Grid padrão do mapa
+					INVOKE AtualizaFase, OFFSET fase2, LENGTHOF fase2
+ 0000023E  6A 12	   *	    push   +000000012h
+ 00000240  68 00000090 R   *	    push   dword  ptr OFFSET FLAT: fase2
+ 00000245  E8 FFFFFF21	   *	    call   AtualizaFase
 				    ret
- 0000027F  59		   *	    pop    ecx
- 00000280  5A		   *	    pop    edx
- 00000281  58		   *	    pop    eax
- 00000282  C9		   *	    leave  
- 00000283  C2 0008	   *	    ret    00008h
+ 0000024A  59		   *	    pop    ecx
+ 0000024B  5A		   *	    pop    edx
+ 0000024C  58		   *	    pop    eax
+ 0000024D  C9		   *	    leave  
+ 0000024E  C2 0008	   *	    ret    00008h
 
- 00000286			RenderScene ENDP
-exemplo.asm(275) : warning A6004:procedure argument or local not referenced : posx
-exemplo.asm(275) : warning A6004:procedure argument or local not referenced : posy
+ 00000251			RenderScene ENDP
+exemplo.asm(265) : warning A6004:procedure argument or local not referenced : posx
+exemplo.asm(265) : warning A6004:procedure argument or local not referenced : posy
 
- 00000286			MovimentaJogador PROC USES eax px: DWORD, py: DWORD
+ 00000251			MovimentaJogador PROC USES eax px: DWORD, py: DWORD
 
- 00000286  55		   *	    push   ebp
- 00000287  8B EC	   *	    mov    ebp, esp
- 00000289  50		   *	    push   eax
- 0000028A  8B 55 0C			mov edx, py
- 0000028D  8B 4D 08			mov ecx, px
+ 00000251  55		   *	    push   ebp
+ 00000252  8B EC	   *	    mov    ebp, esp
+ 00000254  50		   *	    push   eax
+ 00000255  8B 55 0C			mov edx, py
+ 00000258  8B 4D 08			mov ecx, px
 
- 00000290  B8 00000032			mov eax, 50
- 00000295  E8 00000000 E		call Delay
- 0000029A  E8 00000000 E		call ReadKey
- 0000029F  74 34			jz RESUME
+ 0000025B  B8 00000019			mov eax, 25
+ 00000260  E8 00000000 E		call Delay
+ 00000265  E8 00000000 E		call ReadKey
+ 0000026A  74 34			jz RESUME
 
- 000002A1  8B 55 0C			mov edx, py ;//Sobrescrevendo edx com posy; ReadKey altera EDX
+ 0000026C  8B 55 0C			mov edx, py ;//Sobrescrevendo edx com posy; ReadKey altera EDX
 
 					INVOKE CharToBuffer, [ecx], [edx], ELEMENTO_FUNDO, COR_FUNDO
- 000002A4  6A 60	   *	    push   +000000060h
- 000002A6  6A 20	   *	    push   +000000020h
- 000002A8  FF 32	   *	    push   dword  ptr [edx]
- 000002AA  FF 31	   *	    push   dword  ptr [ecx]
- 000002AC  E8 FFFFFE93	   *	    call   CharToBuffer
+ 0000026F  6A 60	   *	    push   +000000060h
+ 00000271  6A 20	   *	    push   +000000020h
+ 00000273  FF 32	   *	    push   dword  ptr [edx]
+ 00000275  FF 31	   *	    push   dword  ptr [ecx]
+ 00000277  E8 FFFFFEBF	   *	    call   CharToBuffer
 
- 000002B1  80 FC 50			cmp ah, 50h
- 000002B4  74 1D			jz INCREMENTO_Y ;//Cima
- 000002B6  80 FC 48			cmp ah, 48h
- 000002B9  74 0C			jz DECREMENTO_Y ;//Baixo
- 000002BB  80 FC 4D			cmp ah, 4Dh
- 000002BE  74 0F			jz INCREMENTO_X ;//Direita
- 000002C0  80 FC 4B			cmp ah, 4Bh
- 000002C3  74 06			jz DECREMENTO_X ;//Esquerda
- 000002C5  EB 0E			jmp RESUME
+ 0000027C  80 FC 50			cmp ah, 50h
+ 0000027F  74 1D			jz INCREMENTO_Y ;//Cima
+ 00000281  80 FC 48			cmp ah, 48h
+ 00000284  74 0C			jz DECREMENTO_Y ;//Baixo
+ 00000286  80 FC 4D			cmp ah, 4Dh
+ 00000289  74 0F			jz INCREMENTO_X ;//Direita
+ 0000028B  80 FC 4B			cmp ah, 4Bh
+ 0000028E  74 06			jz DECREMENTO_X ;//Esquerda
+ 00000290  EB 0E			jmp RESUME
 
- 000002C7				DECREMENTO_Y :
- 000002C7  FF 0A			dec DWORD PTR [edx]
- 000002C9  EB 0A			jmp RESUME
+ 00000292				DECREMENTO_Y :
+ 00000292  FF 0A			dec DWORD PTR [edx]
+ 00000294  EB 0A			jmp RESUME
 
- 000002CB				DECREMENTO_X :
- 000002CB  FF 09			dec DWORD PTR[ecx]
- 000002CD  EB 06			jmp RESUME
+ 00000296				DECREMENTO_X :
+ 00000296  FF 09			dec DWORD PTR[ecx]
+ 00000298  EB 06			jmp RESUME
 
- 000002CF				INCREMENTO_X :
- 000002CF  FF 01			inc DWORD PTR[ecx]
- 000002D1  EB 02			jmp RESUME
+ 0000029A				INCREMENTO_X :
+ 0000029A  FF 01			inc DWORD PTR[ecx]
+ 0000029C  EB 02			jmp RESUME
 
- 000002D3				INCREMENTO_Y :
- 000002D3  FF 02			inc DWORD PTR[edx]
+ 0000029E				INCREMENTO_Y :
+ 0000029E  FF 02			inc DWORD PTR[edx]
 
- 000002D5				RESUME:
+ 000002A0				RESUME:
 					ret
- 000002D5  58		   *	    pop    eax
- 000002D6  C9		   *	    leave  
- 000002D7  C2 0008	   *	    ret    00008h
+ 000002A0  58		   *	    pop    eax
+ 000002A1  C9		   *	    leave  
+ 000002A2  C2 0008	   *	    ret    00008h
+ 000002A5			MovimentaJogador ENDP
 
- 000002DA			MovimentaJogador ENDP
-
- 000002DA			ChecaColisao PROC USES edx px: DWORD, py: DWORD
- 000002DA  55		   *	    push   ebp
- 000002DB  8B EC	   *	    mov    ebp, esp
- 000002DD  52		   *	    push   edx
- 000002DE  8B 45 0C		    mov eax, py
- 000002E1  BA 00000078		    mov edx, COLS
- 000002E6  F7 E2		    mul edx
- 000002E8  03 45 08		    add eax, px
- 000002EB  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ' '
-	   00000038 R 20
- 000002F4  74 21		    jz NAO_COLIDIU
- 000002F6  66| 81 3C 85		    cmp buffer[eax * CHAR_INFO].Char, 0FEh
-	   00000038 R
+ 000002A5			ChecaColisao PROC USES edx px: DWORD, py: DWORD
+ 000002A5  55		   *	    push   ebp
+ 000002A6  8B EC	   *	    mov    ebp, esp
+ 000002A8  52		   *	    push   edx
+ 000002A9  8B 45 0C		    mov eax, py
+ 000002AC  BA 00000078		    mov edx, COLS
+ 000002B1  F7 E2		    mul edx
+ 000002B3  03 45 08		    add eax, px
+ 000002B6  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ' '
+	   0000013E R 20
+ 000002BF  74 21		    jz NAO_COLIDIU
+ 000002C1  66| 81 3C 85		    cmp buffer[eax * CHAR_INFO].Char, 0FEh
+	   0000013E R
 	   00FE
- 00000300  74 15		    jz NAO_COLIDIU
- 00000302  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, '#'
-	   00000038 R 23
- 0000030B  74 11		    jz COLIDIU_OBSTACULO
- 0000030D  B8 00000002		    mov eax, 2 ;Colidiu com o Objetivo!
- 00000312			RESUME2:
+ 000002CB  74 15		    jz NAO_COLIDIU
+ 000002CD  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, '#'
+	   0000013E R 23
+ 000002D6  74 11		    jz COLIDIU_OBSTACULO
+ 000002D8  B8 00000002		    mov eax, 2 ;Colidiu com o Objetivo!
+ 000002DD			RESUME2:
 				    ret
- 00000312  5A		   *	    pop    edx
- 00000313  C9		   *	    leave  
- 00000314  C2 0008	   *	    ret    00008h
+ 000002DD  5A		   *	    pop    edx
+ 000002DE  C9		   *	    leave  
+ 000002DF  C2 0008	   *	    ret    00008h
 
- 00000317			NAO_COLIDIU:
- 00000317  B8 00000000		    mov eax, 0
- 0000031C  EB F4		    jmp RESUME2
+ 000002E2			NAO_COLIDIU:
+ 000002E2  B8 00000000		    mov eax, 0
+ 000002E7  EB F4		    jmp RESUME2
 
- 0000031E			COLIDIU_OBSTACULO:
- 0000031E  B8 00000001		    mov eax, 1
- 00000323  EB ED		    jmp RESUME2
+ 000002E9			COLIDIU_OBSTACULO:
+ 000002E9  B8 00000001		    mov eax, 1
+ 000002EE  EB ED		    jmp RESUME2
 
 
- 00000325			ChecaColisao ENDP
+ 000002F0			ChecaColisao ENDP
 
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/24/19 22:52:52
+Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/25/19 00:35:04
 Animation exampl					     Symbols 2 - 1
 
 
@@ -611,11 +654,10 @@ MOUSE_EVENT_RECORD . . . . . . .	 00000010
   dwButtonState  . . . . . . . .	 00000004	 DWord
   dwMouseControlKeyState . . . .	 00000008	 DWord
   dwEventFlags . . . . . . . . .	 0000000C	 DWord
-OBSTACULO_FASE . . . . . . . . .	 0000000D
-  Base . . . . . . . . . . . . .	 00000000	 DWord
-  Movimento  . . . . . . . . . .	 00000004	 Byte
-  X  . . . . . . . . . . . . . .	 00000005	 DWord
-  Y  . . . . . . . . . . . . . .	 00000009	 DWord
+OBSTACULO_FASE . . . . . . . . .	 00000009
+  Movimento  . . . . . . . . . .	 00000000	 Byte
+  X  . . . . . . . . . . . . . .	 00000001	 DWord
+  Y  . . . . . . . . . . . . . .	 00000005	 DWord
 SMALL_RECT . . . . . . . . . . .	 00000008
   Left . . . . . . . . . . . . .	 00000000	 Word
   Top  . . . . . . . . . . . . .	 00000002	 Word
@@ -640,45 +682,45 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00003892 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000325 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00003998 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000002F0 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-AtualizaFase . . . . . . . . . .	P Near	 00000174 _TEXT	Length= 0000003C Public STDCALL
+AtualizaFase . . . . . . . . . .	P Near	 0000016B _TEXT	Length= 0000003C Public STDCALL
   pFase  . . . . . . . . . . . .	DWord	 bp + 00000008
   cFase  . . . . . . . . . . . .	Word	 bp + 0000000C
-  ATUALIZACAO  . . . . . . . . .	L Near	 00000180 _TEXT	
-AtualizaObstaculo  . . . . . . .	P Near	 000001B0 _TEXT	Length= 000000B8 Public STDCALL
+  ATUALIZACAO  . . . . . . . . .	L Near	 00000177 _TEXT	
+AtualizaObstaculo  . . . . . . .	P Near	 000001A7 _TEXT	Length= 0000008C Public STDCALL
   pObstaculo . . . . . . . . . .	DWord	 bp + 00000008
-  case0  . . . . . . . . . . . .	L Near	 000001D8 _TEXT	
-  case1  . . . . . . . . . . . .	L Near	 000001DD _TEXT	
-  INVERTEY . . . . . . . . . . .	L Near	 000001F8 _TEXT	
-  case2  . . . . . . . . . . . .	L Near	 000001FE _TEXT	
-  INVERTEY2  . . . . . . . . . .	L Near	 00000219 _TEXT	
-  case3  . . . . . . . . . . . .	L Near	 0000021F _TEXT	
-  INVERTEX . . . . . . . . . . .	L Near	 0000023A _TEXT	
-  case4  . . . . . . . . . . . .	L Near	 00000240 _TEXT	
-  INVERTEX2  . . . . . . . . . .	L Near	 0000025B _TEXT	
-  FIM  . . . . . . . . . . . . .	L Near	 0000025F _TEXT	
-CharToBuffer . . . . . . . . . .	P Near	 00000144 _TEXT	Length= 00000030 Public STDCALL
+  case0  . . . . . . . . . . . .	L Near	 000001D4 _TEXT	
+  case1  . . . . . . . . . . . .	L Near	 000001D6 _TEXT	
+  INVERTEY . . . . . . . . . . .	L Near	 000001E5 _TEXT	
+  case2  . . . . . . . . . . . .	L Near	 000001EA _TEXT	
+  INVERTEY2  . . . . . . . . . .	L Near	 000001F9 _TEXT	
+  case3  . . . . . . . . . . . .	L Near	 000001FE _TEXT	
+  INVERTEX . . . . . . . . . . .	L Near	 0000020D _TEXT	
+  case4  . . . . . . . . . . . .	L Near	 00000212 _TEXT	
+  INVERTEX2  . . . . . . . . . .	L Near	 00000221 _TEXT	
+  FIM  . . . . . . . . . . . . .	L Near	 00000224 _TEXT	
+CharToBuffer . . . . . . . . . .	P Near	 0000013B _TEXT	Length= 00000030 Public STDCALL
   bufx . . . . . . . . . . . . .	DWord	 bp + 00000008
   bufy . . . . . . . . . . . . .	DWord	 bp + 0000000C
   char . . . . . . . . . . . . .	Word	 bp + 00000010
   cor  . . . . . . . . . . . . .	Word	 bp + 00000014
-ChecaColisao . . . . . . . . . .	P Near	 000002DA _TEXT	Length= 0000004B Public STDCALL
+ChecaColisao . . . . . . . . . .	P Near	 000002A5 _TEXT	Length= 0000004B Public STDCALL
   px . . . . . . . . . . . . . .	DWord	 bp + 00000008
   py . . . . . . . . . . . . . .	DWord	 bp + 0000000C
-  RESUME2  . . . . . . . . . . .	L Near	 00000312 _TEXT	
-  NAO_COLIDIU  . . . . . . . . .	L Near	 00000317 _TEXT	
-  COLIDIU_OBSTACULO  . . . . . .	L Near	 0000031E _TEXT	
-ClearBuffer  . . . . . . . . . .	P Near	 000000AE _TEXT	Length= 00000096 Public STDCALL
-  LINHA1 . . . . . . . . . . . .	L Near	 000000B3 _TEXT	
-  COLUNAS  . . . . . . . . . . .	L Near	 000000CD _TEXT	
-  LINHANROWS . . . . . . . . . .	L Near	 00000100 _TEXT	
+  RESUME2  . . . . . . . . . . .	L Near	 000002DD _TEXT	
+  NAO_COLIDIU  . . . . . . . . .	L Near	 000002E2 _TEXT	
+  COLIDIU_OBSTACULO  . . . . . .	L Near	 000002E9 _TEXT	
+ClearBuffer  . . . . . . . . . .	P Near	 000000A5 _TEXT	Length= 00000096 Public STDCALL
+  LINHA1 . . . . . . . . . . . .	L Near	 000000AA _TEXT	
+  COLUNAS  . . . . . . . . . . .	L Near	 000000C4 _TEXT	
+  LINHANROWS . . . . . . . . . .	L Near	 000000F7 _TEXT	
 CloseFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Clrscr . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -721,14 +763,14 @@ HeapSize . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 IsDigit  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 LocalFree  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MessageBoxA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-MovimentaJogador . . . . . . . .	P Near	 00000286 _TEXT	Length= 00000054 Public STDCALL
+MovimentaJogador . . . . . . . .	P Near	 00000251 _TEXT	Length= 00000054 Public STDCALL
   px . . . . . . . . . . . . . .	DWord	 bp + 00000008
   py . . . . . . . . . . . . . .	DWord	 bp + 0000000C
-  DECREMENTO_Y . . . . . . . . .	L Near	 000002C7 _TEXT	
-  DECREMENTO_X . . . . . . . . .	L Near	 000002CB _TEXT	
-  INCREMENTO_X . . . . . . . . .	L Near	 000002CF _TEXT	
-  INCREMENTO_Y . . . . . . . . .	L Near	 000002D3 _TEXT	
-  RESUME . . . . . . . . . . . .	L Near	 000002D5 _TEXT	
+  DECREMENTO_Y . . . . . . . . .	L Near	 00000292 _TEXT	
+  DECREMENTO_X . . . . . . . . .	L Near	 00000296 _TEXT	
+  INCREMENTO_X . . . . . . . . .	L Near	 0000029A _TEXT	
+  INCREMENTO_Y . . . . . . . . .	L Near	 0000029E _TEXT	
+  RESUME . . . . . . . . . . . .	L Near	 000002A0 _TEXT	
 MsgBoxAsk  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MsgBox . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 OpenInputFile  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -750,7 +792,7 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-RenderScene  . . . . . . . . . .	P Near	 00000268 _TEXT	Length= 0000001E Public STDCALL
+RenderScene  . . . . . . . . . .	P Near	 00000233 _TEXT	Length= 0000001E Public STDCALL
   posx . . . . . . . . . . . . .	DWord	 bp + 00000008
   posy . . . . . . . . . . . . .	DWord	 bp + 0000000C
 SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -791,10 +833,10 @@ WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000AE Public STDCALL
+main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000000A5 Public STDCALL
   ANIMATION  . . . . . . . . . .	L Near	 0000000C _TEXT	
-  RESTART  . . . . . . . . . . .	L Near	 00000048 _TEXT	
-  CONTINUE . . . . . . . . . . .	L Near	 0000005C _TEXT	
+  RESTART  . . . . . . . . . . .	L Near	 00000047 _TEXT	
+  CONTINUE . . . . . . . . . . .	L Near	 0000005B _TEXT	
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
@@ -1028,14 +1070,16 @@ WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
 black  . . . . . . . . . . . . .	Number	 00000000h   
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
-bufferCoord  . . . . . . . . . .	COORD	 0000387C _DATA	
-bufferSize . . . . . . . . . . .	COORD	 00003878 _DATA	
-buffer . . . . . . . . . . . . .	CHAR_INFO  00000038 _DATA	
-character  . . . . . . . . . . .	Word	 00003890 _DATA	
-console  . . . . . . . . . . . .	DWord	 00000034 _DATA	
+bufferCoord  . . . . . . . . . .	COORD	 00003982 _DATA	
+bufferSize . . . . . . . . . . .	COORD	 0000397E _DATA	
+buffer . . . . . . . . . . . . .	CHAR_INFO  0000013E _DATA	
+character  . . . . . . . . . . .	Word	 00003996 _DATA	
+console  . . . . . . . . . . . .	DWord	 0000013A _DATA	
 cyan . . . . . . . . . . . . . .	Number	 00000003h   
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
 fase1  . . . . . . . . . . . . .	OBSTACULO_FASE  00000000 _DATA	
+fase2  . . . . . . . . . . . . .	OBSTACULO_FASE  00000090 _DATA	
+fases  . . . . . . . . . . . . .	DWord	 00000132 _DATA	
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
 lightBlue  . . . . . . . . . . .	Number	 00000009h   
@@ -1046,12 +1090,12 @@ lightMagenta . . . . . . . . . .	Number	 0000000Dh
 lightRed . . . . . . . . . . . .	Number	 0000000Ch   
 magenta  . . . . . . . . . . . .	Number	 00000005h   
 red  . . . . . . . . . . . . . .	Number	 00000004h   
-region . . . . . . . . . . . . .	SMALL_RECT  00003880 _DATA	
+region . . . . . . . . . . . . .	SMALL_RECT  00003986 _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
-x  . . . . . . . . . . . . . . .	DWord	 00003888 _DATA	
+x  . . . . . . . . . . . . . . .	DWord	 0000398E _DATA	
 yellow . . . . . . . . . . . . .	Number	 0000000Eh   
-y  . . . . . . . . . . . . . . .	DWord	 0000388C _DATA	
+y  . . . . . . . . . . . . . . .	DWord	 00003992 _DATA	
 
 	   2 Warnings
 	   0 Errors

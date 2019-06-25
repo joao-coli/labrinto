@@ -14,7 +14,6 @@ CHAR_INFO STRUCT
 CHAR_INFO ENDS
 
 OBSTACULO_FASE STRUCT
-	Base		  CHAR_INFO <>
 	Movimento	  BYTE ? ;//0 estatico, 1 cima, 2 baixo, 3 direita, 4 esquerda
 	X			  DWORD ? ;//Posicao x
 	Y			  DWORD ? ;//Posicao y
@@ -68,10 +67,14 @@ AtualizaObstaculo PROTO,
 	INI_Y = 15
 
 
-	fase1 OBSTACULO_FASE <<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 1d, 5d, 15d>,
-		<<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 2d, 6d, 15d>,
-		<<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 1d, 7d, 15d>,
-		<<<ELEMENTO_OBSTACULO>, COR_OBSTACULO>, 2d, 8d, 15d>
+	fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
+		<1d, 38d, 15d>, <2d, 40d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>, <2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>,
+		<1d, 99d, 15d>, <2d, 103d, 15d>, <1d, 110d, 15d>
+	fase2 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 6d, 15d>, <1d, 7d, 15d>, <2d, 8d, 15d>, <1d, 9d, 15d>, <2d, 10d, 15d>,
+		<1d, 57d, 8d>, <2d, 58d, 8d>, <1d, 59d, 8d>, <2d, 60d, 8d>, <1d, 61d, 8d>, <2d, 62d, 8d>,
+		<1d, 105d, 25d>, <2d, 106d, 25d>, <1d, 107d, 25d>, <2d, 108d, 25d>, <1d, 109d, 25d>, <2d, 110d, 25d>
+
+	fases DWORD OFFSET fase1, OFFSET fase2
 
     console HANDLE 0
     buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
@@ -89,7 +92,6 @@ main PROC
     mov console, eax; save console handle
 
 	ANIMATION:
-    push ecx
     invoke RenderScene, x, y
 	invoke MovimentaJogador, OFFSET x, OFFSET y
     invoke ChecaColisao, x, y
@@ -107,8 +109,6 @@ main PROC
 	INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM
     invoke WriteConsoleOutput, console,
     ADDR buffer, bufferSize, bufferCoord, ADDR region
-    INVOKE Sleep, 10; delay between frames
-    pop ecx
     jmp ANIMATION
 
 exit
@@ -184,6 +184,9 @@ AtualizaFase ENDP
 AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
 
 	mov edx, pObstaculo
+
+	mov ebx, DWORD PTR(OBSTACULO_FASE PTR[edx]).X
+	mov ecx, DWORD PTR(OBSTACULO_FASE PTR[edx]).Y
 	movzx esi, BYTE PTR (OBSTACULO_FASE PTR [edx]).Movimento
 	cmp esi, 0
 	jz case0
@@ -196,80 +199,67 @@ AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
 	cmp esi, 4
 	jz case4
 
+
 	case0:
 	jmp FIM
 
 	case1:
-	mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
-	mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
 	inc ecx
 	INVOKE ChecaColisao, ebx, ecx
 	cmp eax, 0
 	jnz INVERTEY
 
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 	jmp FIM
 
-	INVERTEY:
-	mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 02h
-	jmp FIM
+		INVERTEY:
+		mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 02h
+		jmp FIM
 
 	case2:
-	mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
-	mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
 	dec ecx
 	INVOKE ChecaColisao, ebx, ecx
 	cmp eax, 0
 	jnz INVERTEY2
 
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 	jmp FIM
 
-	INVERTEY2:
-	mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 01h
-	jmp FIM
+		INVERTEY2:
+		mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 01h
+		jmp FIM
 
 	case3:
-	mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
-	mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
 	inc ebx
 	INVOKE ChecaColisao, ebx, ecx
 	cmp eax, 0
 	jnz INVERTEX
 
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 	jmp FIM
 
-	INVERTEX:
-	mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 04h
-	jmp FIM
+		INVERTEX:
+		mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 04h
+		jmp FIM
 
 	case4:
-	mov ebx, DWORD PTR (OBSTACULO_FASE PTR[edx]).X
-	mov ecx, DWORD PTR (OBSTACULO_FASE PTR[edx]).Y
 	dec ebx
 	INVOKE ChecaColisao, ebx, ecx
 	cmp eax, 0
 	jnz INVERTEX2
 
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
-	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 	jmp FIM
 
-	INVERTEX2:
-	mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 03h
+		INVERTEX2:
+		mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 03h
 
 
 	FIM:
+	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
+	mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 	ret
 AtualizaObstaculo ENDP
 
 RenderScene PROC USES eax edx ecx posx: DWORD, posy: DWORD
     call ClearBuffer ;//Grid padrão do mapa
-	INVOKE AtualizaFase, OFFSET fase1, LENGTHOF fase1
+	INVOKE AtualizaFase, OFFSET fase2, LENGTHOF fase2
     ret
 
 RenderScene ENDP
@@ -279,7 +269,7 @@ MovimentaJogador PROC USES eax px: DWORD, py: DWORD
 	mov edx, py
 	mov ecx, px
 
-	mov eax, 50
+	mov eax, 25
 	call Delay
 	call ReadKey
 	jz RESUME
@@ -315,7 +305,6 @@ MovimentaJogador PROC USES eax px: DWORD, py: DWORD
 
 	RESUME:
 	ret
-
 MovimentaJogador ENDP
 
 ChecaColisao PROC USES edx px: DWORD, py: DWORD

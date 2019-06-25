@@ -1,4 +1,4 @@
 ﻿  Assembling exemplo.asm...
-exemplo.asm(275): warning A6004: procedure argument or local not referenced : posx
-exemplo.asm(275): warning A6004: procedure argument or local not referenced : posy
+exemplo.asm(265): warning A6004: procedure argument or local not referenced : posx
+exemplo.asm(265): warning A6004: procedure argument or local not referenced : posy
   Project.vcxproj -> C:\Users\jbcol\OneDrive\Documentos\LArq2\labrinto\Debug\Project.exe
