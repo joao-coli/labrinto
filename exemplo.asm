@@ -2,6 +2,7 @@ TITLE Animation example
 ;; http://stackoverflow.com/questions/34217344/clear-screen-without-interrupt
 
 INCLUDE Irvine32.inc
+INCLUDELIB Winmm.lib
 
 CHARTYPE UNION
 	UnicodeChar    WORD ?
@@ -53,7 +54,23 @@ AtualizaFase PROTO,
 AtualizaObstaculo PROTO,
 	pObstaculo: DWORD
 
+PlaySound PROTO,
+    pszSound : PTR BYTE,
+    hmod : DWORD,
+    fdwSound : DWORD
+
+
 .data
+    deviceConnect BYTE "DeviceConnect", 0
+
+    SND_ALIAS    DWORD 00010000h
+    SND_RESOURCE DWORD 00040005h
+    SND_FILENAME DWORD 00020000h
+    SND_ASYNC DWORD    00000001h
+
+    file BYTE "C:\Users\vitor\Downloads\2019.1\Arq2\Projeto\labrinto\Debug\fail.wav", 0
+
+
 	COLS = 120; number of columns;//Quantidade de colunas do mapa
 	ROWS = 30; number of rows;//Quantidade de linhas do mapa
 	COR_OBSTACULO = 6Fh;//Cor dos elementos do buffer
@@ -70,11 +87,17 @@ AtualizaObstaculo PROTO,
 	fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
 		<1d, 38d, 15d>, <2d, 40d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>, <2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>,
 		<1d, 99d, 15d>, <2d, 103d, 15d>, <1d, 110d, 15d>
+
 	fase2 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 6d, 15d>, <1d, 7d, 15d>, <2d, 8d, 15d>, <1d, 9d, 15d>, <2d, 10d, 15d>,
 		<1d, 57d, 8d>, <2d, 58d, 8d>, <1d, 59d, 8d>, <2d, 60d, 8d>, <1d, 61d, 8d>, <2d, 62d, 8d>,
 		<1d, 105d, 25d>, <2d, 106d, 25d>, <1d, 107d, 25d>, <2d, 108d, 25d>, <1d, 109d, 25d>, <2d, 110d, 25d>
 
-	fases DWORD OFFSET fase1, OFFSET fase2
+     fase3 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 7d, 15d>, <1d, 9d, 15d>,  <2d, 11d, 15d>, <1d, 13d, 15d>, <2d, 15d, 15d>,
+	    <1d, 17d, 15d>, <2d, 19d, 15d>, <1d, 21d, 15d>, <2d, 23d, 15d>, <1d, 25d, 15d>, <2d, 27d, 15d>,<1d, 29d, 15d>,
+	    <2d, 31d, 15d>, <1d, 33d, 15d>,  <2d, 35d, 15d>, <1d, 37d, 15d>, <2d, 39d, 15d>, <1d, 41d, 15d>, <2d, 43d, 15d>,
+	    <1d, 45d, 15d>, <2d, 47d, 15d>
+
+	fases DWORD OFFSET fase1, OFFSET fase2, OFFSET fase3
 
     console HANDLE 0
     buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
@@ -88,6 +111,7 @@ AtualizaObstaculo PROTO,
 
 .code
 main PROC
+    INVOKE PlaySound, OFFSET deviceConnect, NULL, SND_ALIAS
     INVOKE GetStdHandle, STD_OUTPUT_HANDLE
     mov console, eax; save console handle
 
@@ -104,7 +128,7 @@ main PROC
 	RESTART:
     mov x, INI_X
     mov y, INI_Y
-
+    INVOKE PlaySound, OFFSET file, NULL, SND_ASYNC
 	CONTINUE:
 	INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM
     invoke WriteConsoleOutput, console,
