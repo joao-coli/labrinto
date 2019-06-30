@@ -14,11 +14,23 @@ CHAR_INFO STRUCT
 	Attributes    WORD ?
 CHAR_INFO ENDS
 
+SSTRING STRUCT
+	PtrString DWORD ?
+	TmString  WORD ?
+	CorString WORD ?
+SSTRING ENDS
+
 OBSTACULO_FASE STRUCT
 	Movimento	  BYTE ? ;//0 estatico, 1 cima, 2 baixo, 3 direita, 4 esquerda
 	X			  DWORD ? ;//Posicao x
 	Y			  DWORD ? ;//Posicao y
 OBSTACULO_FASE ENDS
+
+DADOS_FASE STRUCT
+	Endr   DWORD ? ;//Endereço da fase
+	QtdEl  WORD ? ;//Quantidade de elementos na fase
+	PosObj BYTE ? ;//Posicao do objetivo na primeira coluna do mapa
+DADOS_FASE ENDS
 
 WriteConsoleOutput EQU <WriteConsoleOutputA>
 
@@ -33,14 +45,29 @@ CharToBuffer PROTO,
 	bufx: DWORD,
 	bufy: DWORD,
 	char: WORD,
-	cor: WORD
+	cor:  WORD
+
+LimpaBuffer PROTO,
+	elBuff: WORD,
+	crBuff: WORD
+
+StringParaBuffer PROTO,
+	endString: DWORD,
+	stX:	   DWORD,
+	stY:       DWORD,
+	corSt:     WORD
+
+ExibeMenu PROTO,
+	endMenu: DWORD,
+	tamMenu: BYTE
 
 RenderScene PROTO,
-    posx: DWORD,
-    posy: DWORD
+    addrFase: DWORD,
+	tFase:	  WORD,
+	psObj:	  BYTE
 
 ChecaColisao PROTO,
-    px: DWORD,
+    px:	DWORD,
     py: DWORD
 
 MovimentaJogador PROTO, 
@@ -49,15 +76,16 @@ MovimentaJogador PROTO,
 
 AtualizaFase PROTO, 
 	pFase: DWORD,
-	cFase: WORD
+	cFase: WORD,
+	pObj:  BYTE
 
 AtualizaObstaculo PROTO,
 	pObstaculo: DWORD
 
 PlaySound PROTO,
-    pszSound : PTR BYTE,
-    hmod : DWORD,
-    fdwSound : DWORD
+    pszSound: PTR BYTE,
+    hmod:	  DWORD,
+    fdwSound: DWORD
 
 
 .data
@@ -66,25 +94,77 @@ PlaySound PROTO,
     SND_ALIAS    DWORD 00010000h
     SND_RESOURCE DWORD 00040005h
     SND_FILENAME DWORD 00020000h
-    SND_ASYNC DWORD    00000001h
+    SND_ASYNC    DWORD 00000001h
 
-    file BYTE "C:\Users\vitor\Downloads\2019.1\Arq2\Projeto\labrinto\Debug\fail.wav", 0
+    fail BYTE "colisao.wav", 0
+	prox_fasew BYTE "p_fase.wav", 0
+	congrats BYTE "fim_jogo.wav", 0
 
 
-	COLS = 120; number of columns;//Quantidade de colunas do mapa
-	ROWS = 30; number of rows;//Quantidade de linhas do mapa
+	COLS = 120;//Quantidade de colunas do mapa
+	ROWS = 30;//Quantidade de linhas do mapa
 	COR_OBSTACULO = 6Fh;//Cor dos elementos do buffer
 	COR_FUNDO = 60h
 	COR_OBJETIVO = 6Bh
 	COR_PERSONAGEM = 64h
+	COR_MENU = 0Fh
+	COR_RODAPE = 06h
 	ELEMENTO_FUNDO = ' '
 	ELEMENTO_OBSTACULO = '#'
 	ELEMENTO_OBJETIVO = 'O'
+	ELEMENTO_PERSONAGEM = 0FEh
+	character WORD 0FEh;//Personagem principal
 	INI_X = COLS - 1
 	INI_Y = 15
 
 
-	fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
+	sBLine     BYTE " ", 0
+	addrBLine = OFFSET sBLine
+	cpBLine = LENGTHOF sBLine - 1
+	sRdp	   BYTE "LABrinto - 2019", 0
+	addrRdp = OFFSET sRdp
+	cpRdp = LENGTHOF sRdp
+	sRdp2	   BYTE "Por Joao Gabriel Coli e Vitor Hugo Chaves", 0
+	addrRdp2 = OFFSET sRdp2
+	cpRdp2 = LENGTHOF sRdp2
+
+	sMenu      BYTE "Menu:", 0
+	sMenuJogar BYTE "Jogar (J)", 0
+	sMenuInst  BYTE "Visualizar instrucoes (I)", 0
+	sMenuSair  BYTE "Sair do jogo (S)", 0
+	aMenu      SSTRING <OFFSET sMenu, LENGTHOF sMenu - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
+					   <OFFSET sMenuJogar, LENGTHOF sMenuJogar - 1, COR_MENU>,
+					   <OFFSET sMenuInst, LENGTHOF sMenuInst - 1, COR_MENU>, <OFFSET sMenusair, LENGTHOF sMenuSair - 1, COR_MENU>,
+					   <addrBLine, cpBLine, COR_MENU>, <addrRdp, cpRdp, COR_RODAPE>,
+					   <addrRdp2, cpRdp2, COR_RODAPE>
+
+	sInstrucoes BYTE "Instrucoes:", 0
+	sInstL1     BYTE "O objetivo do jogo e chegar ao final do LABrinto, representado", 0
+	sInstL2		BYTE " pelo caracter O ao final do mapa.", 0
+	sInstL3     BYTE "A movimentacao do personagem principal, ", ELEMENTO_PERSONAGEM, ", se da com o uso das setas direcionais.", 0
+	sInstL4     BYTE "Colidir com qualquer obstaculo, ", ELEMENTO_OBSTACULO, ", ocasiona no reinicio do jogo.", 0
+	sInstL5     BYTE "Vence aquele que conseguir passar por todas as fases.", 0
+	sInstL6     BYTE "Sair (S)", 0
+	aInstrucoes SSTRING <OFFSET sInstrucoes, LENGTHOF sInstrucoes - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
+						<OFFSET sInstL1, LENGTHOF sInstL1 - 1, COR_MENU>, <OFFSET sInstL2, LENGTHOF sInstL2 - 1, COR_MENU>,
+						<OFFSET sInstL3, LENGTHOF sInstL3 - 1, COR_MENU>, <OFFSET sInstL4, LENGTHOF sInstL4 - 1, COR_MENU>, 
+						<OFFSET sInstL5, LENGTHOF sInstL5 - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
+						<OFFSET sInstL6, LENGTHOF sInstL6 - 1, COR_MENU>
+
+	sCrdtL1 BYTE "Obrigado por jogar!", 0
+	sCrdtL2 BYTE "O LABrinto foi desenvolvido para a disciplina a disciplina de", 0
+	sCrdtL3 BYTE "Laboratorio de Arquitetura e Organizacao de Computadores 2,", 0
+	sCrdtL4 BYTE "ministrada pelo Prof. Dr. Luciano Neris.", 0
+	sCrdtL5 BYTE "May the force be with you.", 0
+	sCrdtL6 BYTE "Pressione qualquer tecla para sair.", 0
+	aCreditos SSTRING <OFFSET sCrdtL1, LENGTHOF sCrdtL1 - 1, COR_MENU>, <OFFSET sCrdtL2, LENGTHOF sCrdtL2 - 1, COR_MENU>,
+				      <OFFSET sCrdtL3, LENGTHOF sCrdtL3 - 1, COR_MENU>, <OFFSET sCrdtL4, LENGTHOF sCrdtL4 - 1, COR_MENU>,
+					  <OFFSET sCrdtL5, LENGTHOF sCrdtL5 - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
+					  <OFFSET sCrdtL6, LENGTHOF sCrdtL6 - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
+					  <addrRdp, cpRdp, COR_RODAPE>, <addrRdp2, cpRdp2, COR_RODAPE>
+
+
+fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
 		<1d, 38d, 15d>, <2d, 40d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>, <2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>,
 		<1d, 99d, 15d>, <2d, 103d, 15d>, <1d, 110d, 15d>
 
@@ -97,7 +177,8 @@ PlaySound PROTO,
 	    <2d, 31d, 15d>, <1d, 33d, 15d>,  <2d, 35d, 15d>, <1d, 37d, 15d>, <2d, 39d, 15d>, <1d, 41d, 15d>, <2d, 43d, 15d>,
 	    <1d, 45d, 15d>, <2d, 47d, 15d>
 
-	fases DWORD OFFSET fase1, OFFSET fase2, OFFSET fase3
+	fases DADOS_FASE <OFFSET fase1, LENGTHOF fase1, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>
+
 
     console HANDLE 0
     buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
@@ -107,39 +188,176 @@ PlaySound PROTO,
 
     x DWORD INI_X; current position
     y DWORD INI_Y; of the figure
-    character WORD 0FEh ;//Personagem principal
+
 
 .code
 main PROC
-    INVOKE PlaySound, OFFSET deviceConnect, NULL, SND_ALIAS
+	
+    INVOKE PlaySound, OFFSET deviceConnect, NULL, SND_ALIAS ;//Configuracao para que haja sons
     INVOKE GetStdHandle, STD_OUTPUT_HANDLE
     mov console, eax; save console handle
 
-	ANIMATION:
-    invoke RenderScene, x, y
-	invoke MovimentaJogador, OFFSET x, OFFSET y
-    invoke ChecaColisao, x, y
-    cmp eax, 0
-    jz CONTINUE
-    cmp eax, 1
-    jmp RESTART
-    ;jmp PROXIMA_FASE
+	ESTADO_MENU:
+	INVOKE ExibeMenu, OFFSET aMenu, LENGTHOF aMenu
+	INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
+		AGUARDA_MSG_MENU:
+		call LeTecla
+		cmp al, 'j'
+		jz ESTADO_CONTAGEM
+		cmp al, 'i'
+		jz ESTADO_INSTRUCOES
+		cmp al, 's'
+		jz SAIR
+		jmp AGUARDA_MSG_MENU
 
-	RESTART:
-    mov x, INI_X
-    mov y, INI_Y
-    INVOKE PlaySound, OFFSET file, NULL, SND_ASYNC
-	CONTINUE:
-	INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM
-    invoke WriteConsoleOutput, console,
-    ADDR buffer, bufferSize, bufferCoord, ADDR region
-    jmp ANIMATION
+	ESTADO_INSTRUCOES:
+	INVOKE ExibeMenu, OFFSET aInstrucoes, LENGTHOF aInstrucoes
+	INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
+		AGUARDA_MSG_INSTRUCOES:
+		call LeTecla
+		cmp al, 's'
+		jz ESTADO_MENU
+		jmp AGUARDA_MSG_INSTRUCOES
 
-exit
+
+	ESTADO_CREDITOS:
+		INVOKE PlaySound, NULL, NULL, SND_ASYNC
+		INVOKE PlaySound, OFFSET congrats, NULL, SND_ASYNC
+		INVOKE ExibeMenu, OFFSET aCreditos, LENGTHOF aCreditos
+		INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
+		AGUARDA_MSG_CREDITOS:
+		call LeTecla
+			cmp eax, 0
+			jne ESTADO_MENU
+			jmp AGUARDA_MSG_CREDITOS
+
+	ESTADO_CONTAGEM:
+	INVOKE LimpaBuffer, 0, COR_MENU
+	mov esi, 5
+		REGRESSIVA:
+		mov eax, esi
+		add eax, 30h
+		INVOKE CharToBuffer, ((COLS - 1) / 2), ((ROWS - 1) / 2), ax, COR_MENU
+		INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
+		INVOKE Sleep, 900
+		dec esi
+		cmp esi, 1
+		jge REGRESSIVA
+	
+
+	ESTADO_JOGO:
+	INVOKE LimpaBuffer, ELEMENTO_FUNDO, COR_FUNDO
+		LOOP_JOGO:
+		INVOKE RenderScene, (DADOS_FASE PTR fases[esi]).Endr, (DADOS_FASE PTR fases[esi]).qtdEl, (DADOS_FASE PTR fases[esi]).PosObj
+		call LeTecla
+		cmp al, 's'
+		jz ESTADO_MENU
+		INVOKE MovimentaJogador, OFFSET x, OFFSET y
+		INVOKE ChecaColisao, x, y
+		cmp eax, 0
+		jz CONTINUE
+		cmp eax, 1
+		jz REINICIA
+		jmp ESTADO_TROCA_FASE
+
+			REINICIA:
+			mov x, INI_X
+			mov y, INI_Y
+			INVOKE PlaySound, OFFSET fail, NULL, SND_ASYNC
+			mov esi, 0
+			jmp ESTADO_JOGO
+
+		CONTINUE:
+		INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM;//Imprime o personagem em sua posicao atual
+		INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
+		jmp LOOP_JOGO
+
+	ESTADO_TROCA_FASE:
+	add esi, SIZEOF DADOS_FASE
+	cmp esi, 8
+	jae ESTADO_CREDITOS
+	mov x, INI_X
+	mov y, INI_Y
+	INVOKE PlaySound,NULL,NULL,SND_ASYNC
+	INVOKE PlaySound, OFFSET prox_fasew, NULL, SND_ASYNC
+	jmp ESTADO_JOGO
+
+	SAIR:
+	INVOKE LimpaBuffer, 0, COR_MENU
+	INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
+
+	exit
 main ENDP
 
 
-ClearBuffer PROC USES eax ecx edx
+LimpaBuffer PROC USES eax esi elBuff: WORD, crBuff: WORD
+	mov eax, (COLS * ROWS)
+	mov esi, 0
+
+	LP1:
+	INVOKE CharToBuffer, esi, 0, elBuff, crBuff
+	inc esi
+	cmp esi, eax
+	jb LP1
+
+	ret
+LimpaBuffer ENDP
+
+
+LeTecla PROC
+	mov eax, 25
+	call Delay
+	call ReadKey
+	jz SEM_TECLA
+
+	RETORNA:
+	ret
+
+	SEM_TECLA:
+	mov eax, 0
+	jmp RETORNA
+LeTecla ENDP
+
+StringParaBuffer PROC USES edx esi eax endString: DWORD, stX: DWORD, stY: DWORD, corSt: WORD
+	mov edx, endString
+	mov esi, stX
+
+	ETP1:
+	movzx eax, BYTE PTR [edx]
+	cmp eax, 0
+	je ENDST
+	INVOKE CharToBuffer, esi, stY, ax, corSt
+	inc edx
+	inc esi
+	jmp ETP1
+
+	ENDST:
+	ret
+StringParaBuffer ENDP
+
+ExibeMenu PROC USES eax esi edx ecx endMenu: DWORD, tamMenu: BYTE
+	INVOKE LimpaBuffer, 0, COR_MENU
+
+	mov eax, endMenu
+	movzx esi, tamMenu
+	dec esi
+
+	LPSt:
+	mov edx, DWORD PTR (SSTRING PTR [eax + esi * SSTRING]).PtrString
+	mov ecx, COLS
+	sub cx, WORD PTR (SSTRING PTR [eax + esi * SSTRING]).TmString
+	shr ecx, 1
+	INVOKE StringParaBuffer, edx, ecx, esi, (SSTRING PTR[eax + esi * SSTRING]).CorString
+	CTN:
+	dec esi
+	cmp esi, 0
+	jge LPSt
+
+	ret
+ExibeMenu ENDP
+
+
+MontaGridMapa PROC USES eax ecx edx
     xor eax, eax	;//EAX = 0
 
 	LINHA1:
@@ -166,17 +384,13 @@ ClearBuffer PROC USES eax ecx edx
 	cmp eax, ROWS*COLS
 	jl LINHANROWS
 
-	;//Bloco do objetivo
-	mov buffer[(15 * COLS) * CHAR_INFO].Char, ELEMENTO_OBJETIVO
-		mov buffer[(15 * COLS) * CHAR_INFO].Attributes, COR_OBJETIVO
-
 	;//Remove o obstáculo da posição inicial
-	mov buffer[(16 * COLS - 1) * CHAR_INFO].Char, ELEMENTO_FUNDO
-	mov buffer[(16 * COLS - 1) * CHAR_INFO].Attributes, COR_FUNDO
+	mov buffer[((INI_Y + 1) * COLS - 1) * CHAR_INFO].Char, ELEMENTO_FUNDO
+	mov buffer[((INI_Y + 1) * COLS - 1) * CHAR_INFO].Attributes, COR_FUNDO
 
 
     ret
-ClearBuffer ENDP
+MontaGridMapa ENDP
 
 
 CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD, cor: WORD
@@ -191,16 +405,24 @@ CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD, cor: WORD
     ret
 CharToBuffer ENDP
 
-AtualizaFase PROC USES eax ecx edx pFase: DWORD, cFase: WORD
-	mov eax, pFase
+
+AtualizaFase PROC USES eax ecx edx pFase: DWORD, cFase: WORD, pObj: BYTE
+	mov eax, COLS
+	movzx edx, pObj
+	mul edx
+	mov edx, pFase
 	mov ecx, DWORD PTR cFase
 
 	ATUALIZACAO:
-	INVOKE CharToBuffer, DWORD PTR (OBSTACULO_FASE PTR [eax]).X, DWORD PTR (OBSTACULO_FASE PTR [eax]).Y, ELEMENTO_FUNDO, COR_FUNDO ;//Limpa a posição antiga
-	INVOKE AtualizaObstaculo, eax ;//Atualiza a posição do obstáculo
-	INVOKE CharToBuffer, (OBSTACULO_FASE PTR [eax]).X, DWORD PTR (OBSTACULO_FASE PTR [eax]).Y, ELEMENTO_OBSTACULO, COR_OBSTACULO
-	add eax, TYPE OBSTACULO_FASE
+	INVOKE CharToBuffer, DWORD PTR (OBSTACULO_FASE PTR [edx]).X, DWORD PTR (OBSTACULO_FASE PTR [edx]).Y, ELEMENTO_FUNDO, COR_FUNDO ;//Limpa a posição antiga
+	INVOKE AtualizaObstaculo, edx ;//Atualiza a posição do obstáculo
+	INVOKE CharToBuffer, (OBSTACULO_FASE PTR [edx]).X, DWORD PTR (OBSTACULO_FASE PTR [edx]).Y, ELEMENTO_OBSTACULO, COR_OBSTACULO
+	add edx, TYPE OBSTACULO_FASE
 	loop ATUALIZACAO
+
+	;//Bloco do objetivo
+	mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBJETIVO
+	mov buffer[eax * CHAR_INFO].Attributes, COR_OBJETIVO
 
 	ret
 AtualizaFase ENDP
@@ -281,26 +503,22 @@ AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
 	ret
 AtualizaObstaculo ENDP
 
-RenderScene PROC USES eax edx ecx posx: DWORD, posy: DWORD
-    call ClearBuffer ;//Grid padrão do mapa
-	INVOKE AtualizaFase, OFFSET fase2, LENGTHOF fase2
+RenderScene PROC USES eax edx ecx addrFase: DWORD, tFase: WORD, psObj: BYTE
+    call MontaGridMapa ;//Grid padrao do mapa
+	INVOKE AtualizaFase, addrFase, tFase, psObj ;//Fase e movimentacao dos obstaculos
     ret
 
 RenderScene ENDP
 
-MovimentaJogador PROC USES eax px: DWORD, py: DWORD
+MovimentaJogador PROC USES ecx edx px: DWORD, py: DWORD
+	
+	cmp eax, 0
+	jz RESUME
 
 	mov edx, py
 	mov ecx, px
 
-	mov eax, 25
-	call Delay
-	call ReadKey
-	jz RESUME
-
-	mov edx, py ;//Sobrescrevendo edx com posy; ReadKey altera EDX
-
-	INVOKE CharToBuffer, [ecx], [edx], ELEMENTO_FUNDO, COR_FUNDO
+	INVOKE CharToBuffer, [ecx], [edx], ELEMENTO_FUNDO, COR_FUNDO ;//Limpa posicao atual
 
 	cmp ah, 50h
 	jz INCREMENTO_Y ;//Cima
@@ -331,18 +549,19 @@ MovimentaJogador PROC USES eax px: DWORD, py: DWORD
 	ret
 MovimentaJogador ENDP
 
-ChecaColisao PROC USES edx px: DWORD, py: DWORD
+ChecaColisao PROC USES edx ecx px: DWORD, py: DWORD
     mov eax, py
     mov edx, COLS
     mul edx
     add eax, px
+	movzx ecx, buffer[eax * CHAR_INFO].Char
     cmp buffer[eax * CHAR_INFO].Char, ' '
     jz NAO_COLIDIU
-    cmp buffer[eax * CHAR_INFO].Char, 0FEh
+    cmp buffer[eax * CHAR_INFO].Char, 0FEh ;//Garantir que o personagem nao 'colida' consigo mesmo
     jz NAO_COLIDIU
-    cmp buffer[eax * CHAR_INFO].Char, '#'
+    cmp buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
     jz COLIDIU_OBSTACULO
-    mov eax, 2 ;Colidiu com o Objetivo!
+    mov eax, 2 ;//Colidiu com o objetivo
 RESUME2:
     ret
 
