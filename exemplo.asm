@@ -95,10 +95,13 @@ PlaySound PROTO,
     SND_RESOURCE DWORD 00040005h
     SND_FILENAME DWORD 00020000h
     SND_ASYNC    DWORD 00000001h
+	SND_LOOP	 DWORD 00000008h
+	SND_ALOOP    DWORD 00000009h
 
     fail BYTE "colisao.wav", 0
 	prox_fasew BYTE "p_fase.wav", 0
 	congrats BYTE "fim_jogo.wav", 0
+	menu_music BYTE "menu_music.wav", 0
 
 
 	COLS = 120;//Quantidade de colunas do mapa
@@ -141,7 +144,7 @@ PlaySound PROTO,
 	sInstrucoes BYTE "Instrucoes:", 0
 	sInstL1     BYTE "O objetivo do jogo e chegar ao final do LABrinto, representado", 0
 	sInstL2		BYTE " pelo caracter O ao final do mapa.", 0
-	sInstL3     BYTE "A movimentacao do personagem principal, ", ELEMENTO_PERSONAGEM, ", se da com o uso das setas direcionais.", 0
+	sInstL3     BYTE "A movimentacao do personagem, ", ELEMENTO_PERSONAGEM, ", se da com o uso das setas. 'P' pausa o jogo e 'S' retorna ao menu", 0
 	sInstL4     BYTE "Colidir com qualquer obstaculo, ", ELEMENTO_OBSTACULO, ", ocasiona no reinicio do jogo.", 0
 	sInstL5     BYTE "Vence aquele que conseguir passar por todas as fases.", 0
 	sInstL6     BYTE "Sair (S)", 0
@@ -198,6 +201,8 @@ main PROC
     mov console, eax; save console handle
 
 	ESTADO_MENU:
+	INVOKE PlaySound, OFFSET menu_music, NULL, SND_ALOOP
+	ESTADO_MENU2:
 	INVOKE ExibeMenu, OFFSET aMenu, LENGTHOF aMenu
 	INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
 		AGUARDA_MSG_MENU:
@@ -216,7 +221,7 @@ main PROC
 		AGUARDA_MSG_INSTRUCOES:
 		call LeTecla
 		cmp al, 's'
-		jz ESTADO_MENU
+		jz ESTADO_MENU2
 		jmp AGUARDA_MSG_INSTRUCOES
 
 
@@ -226,12 +231,13 @@ main PROC
 		INVOKE ExibeMenu, OFFSET aCreditos, LENGTHOF aCreditos
 		INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
 		AGUARDA_MSG_CREDITOS:
-		call LeTecla
+			call LeTecla
 			cmp eax, 0
 			jne ESTADO_MENU
 			jmp AGUARDA_MSG_CREDITOS
 
 	ESTADO_CONTAGEM:
+	INVOKE PlaySound, NULL, NULL, SND_ASYNC
 	INVOKE LimpaBuffer, 0, COR_MENU
 	mov esi, 5
 		REGRESSIVA:
@@ -252,6 +258,8 @@ main PROC
 		call LeTecla
 		cmp al, 's'
 		jz ESTADO_MENU
+		cmp al, 'p'
+		jz ESTADO_PAUSA
 		INVOKE MovimentaJogador, OFFSET x, OFFSET y
 		INVOKE ChecaColisao, x, y
 		cmp eax, 0
@@ -281,6 +289,15 @@ main PROC
 	INVOKE PlaySound,NULL,NULL,SND_ASYNC
 	INVOKE PlaySound, OFFSET prox_fasew, NULL, SND_ASYNC
 	jmp ESTADO_JOGO
+
+
+	ESTADO_PAUSA:
+	call LeTecla
+	cmp al, 's'
+	jz ESTADO_MENU
+	cmp al, 'p'
+	jz LOOP_JOGO
+	jmp ESTADO_PAUSA
 
 	SAIR:
 	INVOKE LimpaBuffer, 0, COR_MENU
@@ -361,33 +378,27 @@ MontaGridMapa PROC USES eax ecx edx
     xor eax, eax	;//EAX = 0
 
 	LINHA1:
-	mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
 	inc eax
 	cmp eax, COLS
 	jl LINHA1
 
 	COLUNAS:
-	mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
 	add eax, COLS-1
-	mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
 	inc eax
 	cmp eax, (ROWS - 1)*(COLS - 2)
 	jl COLUNAS
 
 	LINHANROWS:
-	mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	mov buffer[eax * CHAR_INFO].Attributes, COR_OBSTACULO
+	INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
 	inc eax
 	cmp eax, ROWS*COLS
 	jl LINHANROWS
 
 	;//Remove o obstáculo da posição inicial
-	mov buffer[((INI_Y + 1) * COLS - 1) * CHAR_INFO].Char, ELEMENTO_FUNDO
-	mov buffer[((INI_Y + 1) * COLS - 1) * CHAR_INFO].Attributes, COR_FUNDO
-
+	INVOKE CharToBuffer, ((INI_Y + 1) * COLS - 1), 0, ELEMENTO_FUNDO, COR_FUNDO
 
     ret
 MontaGridMapa ENDP
