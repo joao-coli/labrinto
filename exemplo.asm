@@ -274,7 +274,7 @@ main PROC
 
 	ESTADO_TROCA_FASE:
 	add esi, SIZEOF DADOS_FASE
-	cmp esi, 8
+	cmp esi, SIZEOF fases - 1
 	jae ESTADO_CREDITOS
 	mov x, INI_X
 	mov y, INI_Y
