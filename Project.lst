@@ -1,9 +1,10 @@
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
-Animation exampl					     Page 1 - 1
+Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
+LAbrint						     Page 1 - 1
 
 
-				TITLE Animation example
-				;; http://stackoverflow.com/questions/34217344/clear-screen-without-interrupt
+				TITLE LAbrinto
+
+				;//--------------------------------------- Inclusoes e definicoes ----------------------------------------------
 
 				INCLUDE Irvine32.inc
 			      C ; Include file for Irvine32.lib             (Irvine32.inc)
@@ -23,93 +24,127 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 			      C .NOLIST
 			      C .LIST
 			      C 
-				INCLUDELIB Winmm.lib
+				INCLUDELIB Winmm.lib ;//Usada para reproduzir sons
 
+				;//Union-type CHARTYPE: permite a definicao de um char unicode ou ascii sem perda de compatibilidade
  00000002			CHARTYPE UNION
  00000000  0000				UnicodeChar    WORD ?
 					AsciiChar      DB ?
 				CHARTYPE ENDS
 
+				;//Struct CHAR_INFO: elemento passado ao buffer e que sera impresso no console
  00000004			CHAR_INFO STRUCT
- 00000000  0000				Char          CHARTYPE <>
- 00000002  0000				Attributes    WORD ?
+ 00000000  0000				Char          CHARTYPE <> ;//Elemento do tipo CHARTYPE que representa o caracter
+ 00000002  0000				Attributes    WORD ? ;//Atributos passados para o terminal, como cor de texto e fundo do caracter
 				CHAR_INFO ENDS
 
+				;//Struct SSTRING: estrutura para agilizar a manipulacao e uso de strings a serem impressas na tela
  00000008			SSTRING STRUCT
- 00000000  00000000			PtrString DWORD ?
- 00000004  0000				TmString  WORD ?
- 00000006  0000				CorString WORD ?
+ 00000000  00000000			PtrString DWORD ? ;//Ponteiro para a string na memoria
+ 00000004  0000				TmString  WORD ? ;//Tamanho da string. Permite ultrapassar o limite do MASM de 512 caracteres
+ 00000006  0000				CorString WORD ? ;//Cor de impressao da string no terminal 
 				SSTRING ENDS
 
+				;//Struct OBSTACULO_FASE: define um obstaculo presente no mapa, seus eixos de movimentacao e posicao inicial
  00000009			OBSTACULO_FASE STRUCT
- 00000000  00				Movimento	  BYTE ? ;//0 estatico, 1 cima, 2 baixo, 3 direita, 4 esquerda
- 00000001  00000000			X			  DWORD ? ;//Posicao x
- 00000005  00000000			Y			  DWORD ? ;//Posicao y
+ 00000000  00				Movimento	  BYTE ? ;//Para onde ira se mover: 0 estatico, 1 cima, 2 baixo, 3 direita, 4 esquerda
+ 00000001  00000000			X			  DWORD ? ;//Posicao inicial x
+ 00000005  00000000			Y			  DWORD ? ;//Posicao inicial y
 				OBSTACULO_FASE ENDS
 
+				;//Struct DADOS_FASE: encapsula uma fase, permitindo a presenca de varios obstaculos
  00000007			DADOS_FASE STRUCT
- 00000000  00000000			Endr   DWORD ? ;//Endereço da fase
+ 00000000  00000000			Endr   DWORD ? ;//Endereço da fase, que e um vetor de OBSTACULO_FASE
  00000004  0000				QtdEl  WORD ? ;//Quantidade de elementos na fase
  00000006  00				PosObj BYTE ? ;//Posicao do objetivo na primeira coluna do mapa
 				DADOS_FASE ENDS
 
+				;//Definicoes presente nas referencias do professor. Para impressao no buffer e consequentemente no console
+				;// -----------------------------------------
  = WriteConsoleOutputA		WriteConsoleOutput EQU <WriteConsoleOutputA>
 
 				WriteConsoleOutput PROTO,
 				hConsoleOutput : HANDLE,
-				    lpBuffer : PTR CHAR_INFO,
-				    dwBufferSize : COORD,
-				    dwBufferCoord : COORD,
+					lpBuffer : PTR CHAR_INFO,
+					dwBufferSize : COORD,
+					dwBufferCoord : COORD,
 					lpWriteRegion : PTR SMALL_RECT
 
+				;//CharToBuffer: insere no buffer um dado char com uma dada cor, nas posicoes x e y informadas
+				;//Definicioes mais detalhadas na area de implementacao
 				CharToBuffer PROTO,
 					bufx: DWORD,
 					bufy: DWORD,
 					char: WORD,
-					cor:  WORD
+					cor:  WORD  
 
+				;// -----------------------------------------
+
+				;//LimpaBuffer: preenche o buffer (todas as posicoes) com um dado elemento de uma dada cor
+				;//Definicioes mais detalhadas na area de implementacao
 				LimpaBuffer PROTO,
-					elBuff: WORD,
-					crBuff: WORD
+					elBuff: WORD, ;//Elemento
+					crBuff: WORD ;//Cor do elemento
 
+				;//StringParaBuffer: insere no buffer uma string inteira (com cor personalizavel), a partir das posicoes x e y informadas
+				;//Definicioes mais detalhadas na area de implementacao
 				StringParaBuffer PROTO,
-					endString: DWORD,
-					stX:	   DWORD,
-					stY:       DWORD,
-					corSt:     WORD
+					endString: DWORD, ;//Endereco da string
+					stX:	   DWORD, ;//Posicao x onde comecar a insercao
+					stY:       DWORD, ;//Posicao y onde comecar a insercao
+					corSt:     WORD ;//Cor de cada char
 
+				;//ExibeMenu: carrega no buffer o menu inicial do jogo, dado um array de strings e a quantidade de SSTRINGs
+				;//Definicioes mais detalhadas na area de implementacao
 				ExibeMenu PROTO,
-					endMenu: DWORD,
-					tamMenu: BYTE
+					endMenu: DWORD, ;//Endereco para array de SSTRINGS
+					tamMenu: BYTE ;//Tamanho do array de SSTRINGs
 
+				;//RenderScene: carrega no buffer o grid e mapa atual do jogo, dada uma fase, seu tamanho e a posicao do objetivo
+				;//Definicioes mais detalhadas na area de implementacao
 				RenderScene PROTO,
-				    addrFase: DWORD,
-					tFase:	  WORD,
-					psObj:	  BYTE
+				    addrFase: DWORD, ;//Endereco para um array de OBSTACULO_FASE
+					tFase:	  WORD, ;//Tamanho do array de fase
+					psObj:	  BYTE ;//Posicao do objetivo na fase
 
+				;//ChecaColisao: checa se um elemento do mapa colidiu com algum outro elemento
+				;//Definicioes mais detalhadas na area de implementacao
 				ChecaColisao PROTO,
-				    px:	DWORD,
-				    py: DWORD
+				    px:	DWORD, ;//Posicao x a ser analisada
+				    py: DWORD ;//Posicao y a ser analisada
 
+				;//MovimentaJogador: move o personagem principal para as posicoes x e y dadas
+				;//Definicioes mais detalhadas na area de implementacao
 				MovimentaJogador PROTO, 
-					px: DWORD,
-					py: DWORD
+					px: DWORD, ;//Posicao x
+					py: DWORD ;//Posicao y
 
+				;//AtualizaFase: dada uma fase, seu tamanho e posicao de objetivo, atualiza a posicao dos obstaculos moveis
+				;//Definicioes mais detalhadas na area de implementacao
 				AtualizaFase PROTO, 
-					pFase: DWORD,
-					cFase: WORD,
-					pObj:  BYTE
+					pFase: DWORD, ;//Endereco para a fase
+					cFase: WORD, ;//Tamanho da fase (qtd. de obstaculos)
+					pObj:  BYTE ;//Posicao do objetivo na fase
 
+				;//AtualizaObstaculo: atualiza a posicao de um obstaculo especifico
+				;//Definicioes mais detalhadas na area de implementacao
 				AtualizaObstaculo PROTO,
-					pObstaculo: DWORD
+					pObstaculo: DWORD ;//Endereco do OBSTACULO_FASE
 
+				;//Parte de biblioteca do windows citada no moodle da disciplina. Referente a reproducao de sons
+				;//------------------------
 				PlaySound PROTO,
-				    pszSound: PTR BYTE,
-				    hmod:	  DWORD,
-				    fdwSound: DWORD
+				pszSound: PTR BYTE,
+					hmod : DWORD,
+					fdwSound : DWORD
+				;//-------------------------
 
+				;//------------------------------------- Constantes e elementos de memoria ------------------------------------------
 
  00000000			.data
+
+					;//Parte de biblioteca do windows citada no moodle da disciplina. Referente a reproducao de sons
+					;//------------------------------------
  00000000 44 65 76 69 63	    deviceConnect BYTE "DeviceConnect", 0
 	   65 43 6F 6E 6E
 	   65 63 74 00
@@ -117,10 +152,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000000E 00010000		    SND_ALIAS    DWORD 00010000h
  00000012 00040005		    SND_RESOURCE DWORD 00040005h
  00000016 00020000		    SND_FILENAME DWORD 00020000h
- 0000001A 00000001		    SND_ASYNC    DWORD 00000001h
- 0000001E 00000008			SND_LOOP	 DWORD 00000008h
- 00000022 00000009			SND_ALOOP    DWORD 00000009h
+ 0000001A 00000001		    SND_ASYNC    DWORD 00000001h ;//Executa um audio de forma assincrona (pode ser interrompido por outro)
+ 0000001E 00000008			SND_LOOP	 DWORD 00000008h ;//Executa um audio em loop
+ 00000022 00000009			SND_ALOOP    DWORD 00000009h ;//Executa um audio em loop de forma assincrona
 
+					;//Definicao dos arquivos de audio a serem usados
  00000026 63 6F 6C 69 73	    fail BYTE "colisao.wav", 0
 	   61 6F 2E 77 61
 	   76 00
@@ -133,13 +169,15 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000004A 6D 65 6E 75 5F		menu_music BYTE "menu_music.wav", 0
 	   6D 75 73 69 63
 	   2E 77 61 76 00
+					;//------------------------------------
 
-
- = 00000078				COLS = 120;//Quantidade de colunas do mapa
- = 0000001E				ROWS = 30;//Quantidade de linhas do mapa
- = 0000006F				COR_OBSTACULO = 6Fh;//Cor dos elementos do buffer
- = 00000060				COR_FUNDO = 60h
- = 0000006B				COR_OBJETIVO = 6Bh
+					;//Constantes utilizadas para a implementacao
+					;//--------------------------------------------------------------------------------------------------------------------
+ = 00000078				COLS = 120 ;//Quantidade de colunas do mapa
+ = 0000001E				ROWS = 30 ;//Quantidade de linhas do mapa
+ = 0000006F				COR_OBSTACULO = 6Fh ;//Cor dos elementos do buffer
+ = 00000060				COR_FUNDO = 60h ;//Cor do fundo do mapa
+ = 0000006B				COR_OBJETIVO = 6Bh ;// ... demais elementos sao auto-explicativos
  = 00000064				COR_PERSONAGEM = 64h
  = 0000000F				COR_MENU = 0Fh
  = 00000006				COR_RODAPE = 06h
@@ -147,21 +185,22 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  = 00000023				ELEMENTO_OBSTACULO = '#'
  = 0000004F				ELEMENTO_OBJETIVO = 'O'
  = 000000FE				ELEMENTO_PERSONAGEM = 0FEh
+ = 00000005				CONTAGEM = 5 ;//Indicador de contagem antes de iniciar o jogo
+ = 00000019				DELAY_ENTRADA = 25 ;//Quanto tempo dar para a deteccao da entrada
  00000059 00FE				character WORD 0FEh;//Personagem principal
- = 00000077				INI_X = COLS - 1
- = 0000000F				INI_Y = 15
+ = 00000077				INI_X = COLS - 1 ;//Posicao x inicial do personagem
+ = 0000000F				INI_Y = 15 ;//Posicao y inicial do personagem
 
-
- 0000005B 20 00				sBLine     BYTE " ", 0
- = 0000005B				addrBLine = OFFSET sBLine
- = 00000001				cpBLine = LENGTHOF sBLine - 1
- 0000005D 4C 41 42 72 69		sRdp	   BYTE "LABrinto - 2019", 0
+ 0000005B 20 00				sBLine     BYTE " ", 0 ;//Representa uma linha em branco
+ = 0000005B				addrBLine = OFFSET sBLine ;//Endereco da linha em branco
+ = 00000001				cpBLine = LENGTHOF sBLine - 1 ;//Tamanho da linha em branco
+ 0000005D 4C 41 42 72 69		sRdp	   BYTE "LABrinto - 2019", 0 ;//Representa um texto de 'rodape'
 	   6E 74 6F 20 2D
 	   20 32 30 31 39
 	   00
- = 0000005D				addrRdp = OFFSET sRdp
- = 00000010				cpRdp = LENGTHOF sRdp
- 0000006D 50 6F 72 20 4A		sRdp2	   BYTE "Por Joao Gabriel Coli e Vitor Hugo Chaves", 0
+ = 0000005D				addrRdp = OFFSET sRdp ;//Endereco da string
+ = 00000010				cpRdp = LENGTHOF sRdp ;//Tamanho da string
+ 0000006D 50 6F 72 20 4A		sRdp2	   BYTE "Por Joao Gabriel Coli e Vitor Hugo Chaves", 0 ;//Representa outro texto de 'rodape'
 	   6F 61 6F 20 47
 	   61 62 72 69 65
 	   6C 20 43 6F 6C
@@ -170,9 +209,10 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   48 75 67 6F 20
 	   43 68 61 76 65
 	   73 00
- = 0000006D				addrRdp2 = OFFSET sRdp2
- = 0000002A				cpRdp2 = LENGTHOF sRdp2
+ = 0000006D				addrRdp2 = OFFSET sRdp2 ;//Endereco da string
+ = 0000002A				cpRdp2 = LENGTHOF sRdp2 ;//Tamanho da string
 
+					;//Definicao de strings para o menu principal
  00000097 4D 65 6E 75 3A		sMenu      BYTE "Menu:", 0
 	   00
  0000009D 4A 6F 67 61 72		sMenuJogar BYTE "Jogar (J)", 0
@@ -187,6 +227,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   64 6F 20 6A 6F
 	   67 6F 20 28 53
 	   29 00
+					;//Criacao das SSTRINGs para o menu principal
  000000D2 00000097 R 0005		aMenu      SSTRING <OFFSET sMenu, LENGTHOF sMenu - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
 	   000F 0000005B R
 	   0001 000F
@@ -207,6 +248,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 									   <addrBLine, cpBLine, COR_MENU>, <addrRdp, cpRdp, COR_RODAPE>,
 									   <addrRdp2, cpRdp2, COR_RODAPE>
 
+					;//Definicao de strings para o menu instrucoes
  00000112 49 6E 73 74 72		sInstrucoes BYTE "Instrucoes:", 0
 	   75 63 6F 65 73
 	   3A 00
@@ -230,7 +272,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   66 69 6E 61 6C
 	   20 64 6F 20 6D
 	   61 70 61 2E 00
- 00000180 41 20 6D 6F 76		sInstL3     BYTE "A movimentacao do personagem, ", ELEMENTO_PERSONAGEM, ", se da com o uso das setas. 'P' pausa o jogo e 'S' retorna ao menu", 0
+ 00000180 41 20 6D 6F 76		sInstL3     BYTE "A movimentacao do personagem, ", ELEMENTO_PERSONAGEM, ", se da com o uso das setas. 'P' pausa o jogo e 'S' retorna ao menu.", 0
 	   69 6D 65 6E 74
 	   61 63 61 6F 20
 	   64 6F 20 70 65
@@ -249,8 +291,8 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   53 27 20 72 65
 	   74 6F 72 6E 61
 	   20 61 6F 20 6D
-	   65 6E 75 00
- 000001E3 43 6F 6C 69 64		sInstL4     BYTE "Colidir com qualquer obstaculo, ", ELEMENTO_OBSTACULO, ", ocasiona no reinicio do jogo.", 0
+	   65 6E 75 2E 00
+ 000001E4 43 6F 6C 69 64		sInstL4     BYTE "Colidir com qualquer obstaculo, ", ELEMENTO_OBSTACULO, ", ocasiona no reinicio do jogo.", 0
 	   69 72 20 63 6F
 	   6D 20 71 75 61
 	   6C 71 75 65 72
@@ -263,7 +305,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   6E 69 63 69 6F
 	   20 64 6F 20 6A
 	   6F 67 6F 2E 00
- 00000224 56 65 6E 63 65		sInstL5     BYTE "Vence aquele que conseguir passar por todas as fases.", 0
+ 00000225 56 65 6E 63 65		sInstL5     BYTE "Vence aquele que conseguir passar por todas as fases.", 0
 	   20 61 71 75 65
 	   6C 65 20 71 75
 	   65 20 63 6F 6E
@@ -274,9 +316,10 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   64 61 73 20 61
 	   73 20 66 61 73
 	   65 73 2E 00
- 0000025A 53 61 69 72 20		sInstL6     BYTE "Sair (S)", 0
+ 0000025B 53 61 69 72 20		sInstL6     BYTE "Sair (S)", 0
 	   28 53 29 00
- 00000263 00000112 R 000B		aInstrucoes SSTRING <OFFSET sInstrucoes, LENGTHOF sInstrucoes - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
+					;//Criacao das SSTRINGs para o menu instrucoes
+ 00000264 00000112 R 000B		aInstrucoes SSTRING <OFFSET sInstrucoes, LENGTHOF sInstrucoes - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
 	   000F 0000005B R
 	   0001 000F
 	   0000011E R
@@ -284,25 +327,26 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   0000015D R
 	   0022 000F
 	   00000180 R
-	   0062 000F
-	   000001E3 R
+	   0063 000F
+	   000001E4 R
 	   0040 000F
-	   00000224 R
+	   00000225 R
 	   0035 000F
 	   0000005B R
 	   0001 000F
-	   0000025A R
+	   0000025B R
 	   0008 000F
 										<OFFSET sInstL1, LENGTHOF sInstL1 - 1, COR_MENU>, <OFFSET sInstL2, LENGTHOF sInstL2 - 1, COR_MENU>,
 										<OFFSET sInstL3, LENGTHOF sInstL3 - 1, COR_MENU>, <OFFSET sInstL4, LENGTHOF sInstL4 - 1, COR_MENU>, 
 										<OFFSET sInstL5, LENGTHOF sInstL5 - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
 										<OFFSET sInstL6, LENGTHOF sInstL6 - 1, COR_MENU>
 
- 000002AB 4F 62 72 69 67		sCrdtL1 BYTE "Obrigado por jogar!", 0
+					;//Definicao de strings para os creditos
+ 000002AC 4F 62 72 69 67		sCrdtL1 BYTE "Obrigado por jogar!", 0
 	   61 64 6F 20 70
 	   6F 72 20 6A 6F
 	   67 61 72 21 00
- 000002BF 4F 20 4C 41 42		sCrdtL2 BYTE "O LABrinto foi desenvolvido para a disciplina a disciplina de", 0
+ 000002C0 4F 20 4C 41 42		sCrdtL2 BYTE "O LABrinto foi desenvolvido para a disciplina a disciplina de", 0
 	   72 69 6E 74 6F
 	   20 66 6F 69 20
 	   64 65 73 65 6E
@@ -315,7 +359,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   73 63 69 70 6C
 	   69 6E 61 20 64
 	   65 00
- 000002FD 4C 61 62 6F 72		sCrdtL3 BYTE "Laboratorio de Arquitetura e Organizacao de Computadores 2,", 0
+ 000002FE 4C 61 62 6F 72		sCrdtL3 BYTE "Laboratorio de Arquitetura e Organizacao de Computadores 2,", 0
 	   61 74 6F 72 69
 	   6F 20 64 65 20
 	   41 72 71 75 69
@@ -327,7 +371,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   6F 6D 70 75 74
 	   61 64 6F 72 65
 	   73 20 32 2C 00
- 00000339 6D 69 6E 69 73		sCrdtL4 BYTE "ministrada pelo Prof. Dr. Luciano Neris.", 0
+ 0000033A 6D 69 6E 69 73		sCrdtL4 BYTE "ministrada pelo Prof. Dr. Luciano Neris.", 0
 	   74 72 61 64 61
 	   20 70 65 6C 6F
 	   20 50 72 6F 66
@@ -336,13 +380,13 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   61 6E 6F 20 4E
 	   65 72 69 73 2E
 	   00
- 00000362 4D 61 79 20 74		sCrdtL5 BYTE "May the force be with you.", 0
+ 00000363 4D 61 79 20 74		sCrdtL5 BYTE "May the force be with you.", 0
 	   68 65 20 66 6F
 	   72 63 65 20 62
 	   65 20 77 69 74
 	   68 20 79 6F 75
 	   2E 00
- 0000037D 50 72 65 73 73		sCrdtL6 BYTE "Pressione qualquer tecla para sair.", 0
+ 0000037E 50 72 65 73 73		sCrdtL6 BYTE "Pressione qualquer tecla para sair.", 0
 	   69 6F 6E 65 20
 	   71 75 61 6C 71
 	   75 65 72 20 74
@@ -350,18 +394,19 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   70 61 72 61 20
 	   73 61 69 72 2E
 	   00
- 000003A1 000002AB R 0013		aCreditos SSTRING <OFFSET sCrdtL1, LENGTHOF sCrdtL1 - 1, COR_MENU>, <OFFSET sCrdtL2, LENGTHOF sCrdtL2 - 1, COR_MENU>,
-	   000F 000002BF R
+					;//Criacao das SSTRINGs para os creditos
+ 000003A2 000002AC R 0013		aCreditos SSTRING <OFFSET sCrdtL1, LENGTHOF sCrdtL1 - 1, COR_MENU>, <OFFSET sCrdtL2, LENGTHOF sCrdtL2 - 1, COR_MENU>,
+	   000F 000002C0 R
 	   003D 000F
-	   000002FD R
+	   000002FE R
 	   003B 000F
-	   00000339 R
+	   0000033A R
 	   0028 000F
-	   00000362 R
+	   00000363 R
 	   001A 000F
 	   0000005B R
 	   0001 000F
-	   0000037D R
+	   0000037E R
 	   0023 000F
 	   0000005B R
 	   0001 000F
@@ -373,9 +418,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 									  <OFFSET sCrdtL5, LENGTHOF sCrdtL5 - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
 									  <OFFSET sCrdtL6, LENGTHOF sCrdtL6 - 1, COR_MENU>, <addrBLine, cpBLine, COR_MENU>,
 									  <addrRdp, cpRdp, COR_RODAPE>, <addrRdp2, cpRdp2, COR_RODAPE>
+					;//------------------------------------------------------------------------------------------------------------------
 
-
- 000003F1 01 00000005		fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
+					;//Definicao dos elementos de mapa
+					;//------------------------------------------------------------------------------------------------------------------
+ 000003F2 01 00000005			fase1 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
 	   0000000F 02
 	   0000000D
 	   0000000F 01
@@ -390,6 +437,12 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   00000026
 	   0000000F 02
 	   00000028
+	   0000000F 01
+	   00000032
+	   0000000F 02
+	   00000037
+	   0000000F 01
+	   0000003C
 	   0000000F 02
 	   0000004D
 	   0000000F 01
@@ -406,11 +459,16 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 	   00000067
 	   0000000F 01
 	   0000006E
+	   0000000F 01
+	   00000041
+	   0000000F 02
+	   00000046
 	   0000000F
-						<1d, 38d, 15d>, <2d, 40d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>, <2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>,
-						<1d, 99d, 15d>, <2d, 103d, 15d>, <1d, 110d, 15d>
+						<1d, 38d, 15d>, <2d, 40d, 15d>, <1d, 50d, 15d>, <2d, 55d, 15d>, <1d, 60d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>,
+						<2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>, <1d, 99d, 15d>, <2d, 103d, 15d>, <1d, 110d, 15d>, <1d, 65d, 15d>,
+						<2d, 70d, 15d>
 
- 00000481 01 00000005			fase2 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 6d, 15d>, <1d, 7d, 15d>, <2d, 8d, 15d>, <1d, 9d, 15d>, <2d, 10d, 15d>,
+ 000004AF 01 00000005			fase2 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 6d, 15d>, <1d, 7d, 15d>, <2d, 8d, 15d>, <1d, 9d, 15d>, <2d, 10d, 15d>,
 	   0000000F 02
 	   00000006
 	   0000000F 01
@@ -449,7 +507,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 						<1d, 57d, 8d>, <2d, 58d, 8d>, <1d, 59d, 8d>, <2d, 60d, 8d>, <1d, 61d, 8d>, <2d, 62d, 8d>,
 						<1d, 105d, 25d>, <2d, 106d, 25d>, <1d, 107d, 25d>, <2d, 108d, 25d>, <1d, 109d, 25d>, <2d, 110d, 25d>
 
- 00000523 01 00000005		     fase3 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 7d, 15d>, <1d, 9d, 15d>,  <2d, 11d, 15d>, <1d, 13d, 15d>, <2d, 15d, 15d>,
+ 00000551 01 00000005		     fase3 OBSTACULO_FASE <1d, 5d, 15d>, <2d, 7d, 15d>, <1d, 9d, 15d>,  <2d, 11d, 15d>, <1d, 13d, 15d>, <2d, 15d, 15d>,
 	   0000000F 02
 	   00000007
 	   0000000F 01
@@ -497,129 +555,211 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
 					    <2d, 31d, 15d>, <1d, 33d, 15d>,  <2d, 35d, 15d>, <1d, 37d, 15d>, <2d, 39d, 15d>, <1d, 41d, 15d>, <2d, 43d, 15d>,
 					    <1d, 45d, 15d>, <2d, 47d, 15d>
 
- 000005E9 000003F1 R 0010		fases DADOS_FASE <OFFSET fase1, LENGTHOF fase1, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>
-	   04 00000481 R
+ 00000617 01 00000005			fase4 OBSTACULO_FASE  <1d, 5d, 15d>, <2d, 13d, 15d>, <1d, 15d, 15d>, <2d, 21d, 15d>, <1d, 25d, 15d>, <2d, 33d, 15d>,
+	   0000000F 02
+	   0000000D
+	   0000000F 01
+	   0000000F
+	   0000000F 02
+	   00000015
+	   0000000F 01
+	   00000019
+	   0000000F 02
+	   00000021
+	   0000000F 01
+	   00000026
+	   0000000F 01
+	   00000032
+	   0000000F 02
+	   00000037
+	   0000000F 02
+	   0000004D
+	   0000000F 01
+	   0000004B
+	   0000000F 02
+	   00000057
+	   0000000F 01
+	   00000059
+	   0000000F 02
+	   0000005F
+	   0000000F 01
+	   00000063
+	   0000000F 02
+	   00000067
+	   0000000F 01
+	   00000041
+	   0000000F 02
+	   00000046
+	   0000000F 03
+	   00000003
+	   00000005 04
+	   00000002
+	   00000019 03
+	   00000014
+	   00000008 04
+	   00000046
+	   00000014 03
+	   0000000A
+	   0000000E 04
+	   00000001
+	   00000010 02
+	   00000001
+	   00000005 04
+	   00000001
+	   0000000F
+						<1d, 38d, 15d>, <1d, 50d, 15d>, <2d, 55d, 15d>, <2d, 77d, 15d>, <1d, 75d, 15d>,
+						<2d, 87d, 15d>, <1d, 89d, 15d>, <2d, 95d, 15d>, <1d, 99d, 15d>, <2d, 103d, 15d>,  <1d, 65d, 15d>,
+						<2d, 70d, 15d>, <3d, 3d, 5d>, <4d, 2d, 25d>, <3d, 20d, 8d>, <4d, 70d, 20d>, <3d, 10d, 14d>, <4d, 1d, 16d>,
+						<2d, 1d, 5d>, <4d, 1d, 15d>
+
+ 00000701 00000617 R 001A		fases DADOS_FASE <OFFSET fase4, LENGTHOF fase4, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>
+	   04 000004AF R
 	   0012 12
-	   00000523 R
+	   00000551 R
 	   0016 0F
+					;//------------------------------------------------------------------------------------------------------------------
 
 
- 000005FE 00000000		    console HANDLE 0
- 00000602  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
+					;//Definicao dos elementos do buffer
+					;//--------------------------------------------------------------
+ 00000716 00000000		    console HANDLE 0
+ 0000071A  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
 	    0020 0060
 	   ]
- 00003E42 0078 001E		    bufferSize COORD <COLS, ROWS>
- 00003E46 0000 0000		    bufferCoord COORD <0, 0>
- 00003E4A 0000 0000 0077	    region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
+ 00003F5A 0078 001E		    bufferSize COORD <COLS, ROWS>
+ 00003F5E 0000 0000		    bufferCoord COORD <0, 0>
+ 00003F62 0000 0000 0077	    region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
 	   001D
+					;//--------------------------------------------------------------
 
- 00003E52 00000077		    x DWORD INI_X; current position
- 00003E56 0000000F		    y DWORD INI_Y; of the figure
+
+					;//Definicao das variaveis de posicao do personagem (character)
+ 00003F6A 00000077		    x DWORD INI_X; current position
+ 00003F6E 0000000F		    y DWORD INI_Y; of the figure
+
 
 
  00000000			.code
  00000000			main PROC
 					
+					;//----------------------------------------- Execucao do jogo ------------------------------------------------
+
+					;//Inicializacao das configuracoes de som e buffer
+					;//--------------------------------------------------------------
 				    INVOKE PlaySound, OFFSET deviceConnect, NULL, SND_ALIAS ;//Configuracao para que haja sons
  00000000  FF 35 0000000E R *	    push   SND_ALIAS
  00000006  6A 00	   *	    push   +000000000h
  00000008  68 00000000 R   *	    push   dword  ptr OFFSET FLAT: deviceConnect
  0000000D  E8 00000000 E   *	    call   PlaySound
-				    INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+				    INVOKE GetStdHandle, STD_OUTPUT_HANDLE ;//Cria o manipulador do console
  00000012  6A F5	   *	    push    -00000000Bh
  00000014  E8 00000000 E   *	    call   GetStdHandle
- 00000019  A3 000005FE R	    mov console, eax; save console handle
+ 00000019  A3 00000716 R	    mov console, eax ;//Salva o manipulador do console
+					;//--------------------------------------------------------------
 
+					;//Estado menu
+					;//-----------------------------------------------------------------------------------------
  0000001E				ESTADO_MENU:
-					INVOKE PlaySound, OFFSET menu_music, NULL, SND_ALOOP
+					INVOKE PlaySound, OFFSET menu_music, NULL, SND_ALOOP ;//Inicia a musica em loop assincrono
  0000001E  FF 35 00000022 R *	    push   SND_ALOOP
  00000024  6A 00	   *	    push   +000000000h
  00000026  68 0000004A R   *	    push   dword  ptr OFFSET FLAT: menu_music
  0000002B  E8 00000000 E   *	    call   PlaySound
  00000030				ESTADO_MENU2:
-					INVOKE ExibeMenu, OFFSET aMenu, LENGTHOF aMenu
+					INVOKE ExibeMenu, OFFSET aMenu, LENGTHOF aMenu ;//Carrega os itens do menu no buffer
  00000030  6A 08	   *	    push   +000000008h
  00000032  68 000000D2 R   *	    push   dword  ptr OFFSET FLAT: aMenu
  00000037  E8 00000319	   *	    call   ExibeMenu
-					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 0000003C  68 00003E4A R   *	    push   OFFSET region
- 00000041  FF 35 00003E46 R *	    push   dword  ptr bufferCoord
- 00000047  FF 35 00003E42 R *	    push   dword  ptr bufferSize
- 0000004D  68 00000602 R   *	    push   OFFSET buffer
- 00000052  FF 35 000005FE R *	    push   console
+					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region ;//Transfere o buffer para o console
+ 0000003C  68 00003F62 R   *	    push   OFFSET region
+ 00000041  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
+ 00000047  FF 35 00003F5A R *	    push   dword  ptr bufferSize
+ 0000004D  68 0000071A R   *	    push   OFFSET buffer
+ 00000052  FF 35 00000716 R *	    push   console
  00000058  E8 00000000 E   *	    call   WriteConsoleOutputA
- 0000005D					AGUARDA_MSG_MENU:
+ 0000005D					AGUARDA_MSG_MENU: ;//Espera por entrada do usuario
  0000005D  E8 000002A6				call LeTecla
  00000062  3C 6A				cmp al, 'j'
- 00000064  0F 84 000000A4			jz ESTADO_CONTAGEM
+ 00000064  0F 84 000000A4			jz ESTADO_CONTAGEM ;//Inicia o jogo com j
  0000006A  3C 69				cmp al, 'i'
- 0000006C  74 0A				jz ESTADO_INSTRUCOES
+ 0000006C  74 0A				jz ESTADO_INSTRUCOES ;//Carrega as intrucoes com i
  0000006E  3C 73				cmp al, 's'
- 00000070  0F 84 00000231			jz SAIR
+ 00000070  0F 84 00000231			jz SAIR ;//Finaliza o programa com s
  00000076  EB E5				jmp AGUARDA_MSG_MENU
+					;//-----------------------------------------------------------------------------------------
 
+
+					;//Estado instrucoes
+					;//-----------------------------------------------------------------------------------------
  00000078				ESTADO_INSTRUCOES:
-					INVOKE ExibeMenu, OFFSET aInstrucoes, LENGTHOF aInstrucoes
+					INVOKE ExibeMenu, OFFSET aInstrucoes, LENGTHOF aInstrucoes ;//Carrega os itens de instrucoes no buffer
  00000078  6A 09	   *	    push   +000000009h
- 0000007A  68 00000263 R   *	    push   dword  ptr OFFSET FLAT: aInstrucoes
+ 0000007A  68 00000264 R   *	    push   dword  ptr OFFSET FLAT: aInstrucoes
  0000007F  E8 000002D1	   *	    call   ExibeMenu
 					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 00000084  68 00003E4A R   *	    push   OFFSET region
- 00000089  FF 35 00003E46 R *	    push   dword  ptr bufferCoord
- 0000008F  FF 35 00003E42 R *	    push   dword  ptr bufferSize
- 00000095  68 00000602 R   *	    push   OFFSET buffer
- 0000009A  FF 35 000005FE R *	    push   console
+ 00000084  68 00003F62 R   *	    push   OFFSET region
+ 00000089  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
+ 0000008F  FF 35 00003F5A R *	    push   dword  ptr bufferSize
+ 00000095  68 0000071A R   *	    push   OFFSET buffer
+ 0000009A  FF 35 00000716 R *	    push   console
  000000A0  E8 00000000 E   *	    call   WriteConsoleOutputA
- 000000A5					AGUARDA_MSG_INSTRUCOES:
+ 000000A5					AGUARDA_MSG_INSTRUCOES: ;//Espera por entrada do usuario
  000000A5  E8 0000025E				call LeTecla
  000000AA  3C 73				cmp al, 's'
- 000000AC  74 82				jz ESTADO_MENU2
+ 000000AC  74 82				jz ESTADO_MENU2 ;//Retorna ao estado de menu sem reiniciar a musica
  000000AE  EB F5				jmp AGUARDA_MSG_INSTRUCOES
+					;//-----------------------------------------------------------------------------------------
 
 
+					;//Estado instrucoes
+					;//-----------------------------------------------------------------------------------------
  000000B0				ESTADO_CREDITOS:
-						INVOKE PlaySound, NULL, NULL, SND_ASYNC
+						INVOKE PlaySound, NULL, NULL, SND_ASYNC ;//Finaliza outros sons em execucao
  000000B0  FF 35 0000001A R *	    push   SND_ASYNC
  000000B6  6A 00	   *	    push   +000000000h
  000000B8  6A 00	   *	    push   +000000000h
  000000BA  E8 00000000 E   *	    call   PlaySound
-						INVOKE PlaySound, OFFSET congrats, NULL, SND_ASYNC
+						INVOKE PlaySound, OFFSET congrats, NULL, SND_ASYNC ;//Reproduz musica de final de jogo
  000000BF  FF 35 0000001A R *	    push   SND_ASYNC
  000000C5  6A 00	   *	    push   +000000000h
  000000C7  68 0000003D R   *	    push   dword  ptr OFFSET FLAT: congrats
  000000CC  E8 00000000 E   *	    call   PlaySound
-						INVOKE ExibeMenu, OFFSET aCreditos, LENGTHOF aCreditos
+						INVOKE ExibeMenu, OFFSET aCreditos, LENGTHOF aCreditos ;//Carrega os itens de creditos no buffer
  000000D1  6A 0A	   *	    push   +00000000Ah
- 000000D3  68 000003A1 R   *	    push   dword  ptr OFFSET FLAT: aCreditos
+ 000000D3  68 000003A2 R   *	    push   dword  ptr OFFSET FLAT: aCreditos
  000000D8  E8 00000278	   *	    call   ExibeMenu
 						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 000000DD  68 00003E4A R   *	    push   OFFSET region
- 000000E2  FF 35 00003E46 R *	    push   dword  ptr bufferCoord
- 000000E8  FF 35 00003E42 R *	    push   dword  ptr bufferSize
- 000000EE  68 00000602 R   *	    push   OFFSET buffer
- 000000F3  FF 35 000005FE R *	    push   console
+ 000000DD  68 00003F62 R   *	    push   OFFSET region
+ 000000E2  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
+ 000000E8  FF 35 00003F5A R *	    push   dword  ptr bufferSize
+ 000000EE  68 0000071A R   *	    push   OFFSET buffer
+ 000000F3  FF 35 00000716 R *	    push   console
  000000F9  E8 00000000 E   *	    call   WriteConsoleOutputA
- 000000FE					AGUARDA_MSG_CREDITOS:
+ 000000FE					AGUARDA_MSG_CREDITOS: ;//Espera por entrada do usuario
  000000FE  E8 00000205					call LeTecla
  00000103  83 F8 00					cmp eax, 0
  00000106  0F 85 FFFFFF12				jne ESTADO_MENU
  0000010C  EB F0					jmp AGUARDA_MSG_CREDITOS
+					;//-----------------------------------------------------------------------------------------
 
+
+					;//Estado contagem (pre inicio de jogo)
+					;//-----------------------------------------------------------------------------------------
  0000010E				ESTADO_CONTAGEM:
-					INVOKE PlaySound, NULL, NULL, SND_ASYNC
+					INVOKE PlaySound, NULL, NULL, SND_ASYNC ;//Finaliza outros sons em execucao
  0000010E  FF 35 0000001A R *	    push   SND_ASYNC
  00000114  6A 00	   *	    push   +000000000h
  00000116  6A 00	   *	    push   +000000000h
  00000118  E8 00000000 E   *	    call   PlaySound
-					INVOKE LimpaBuffer, 0, COR_MENU
+					INVOKE LimpaBuffer, 0, COR_MENU ;//Preenche o buffer com zeros (0)
  0000011D  6A 0F	   *	    push   +00000000Fh
  0000011F  6A 00	   *	    push   +000000000h
  00000121  E8 000001B2	   *	    call   LimpaBuffer
- 00000126  BE 00000005			mov esi, 5
+ 00000126  BE 00000005			mov esi, CONTAGEM ;//Define de onde comeca a contagem regressiva
  0000012B					REGRESSIVA:
  0000012B  8B C6				mov eax, esi
- 0000012D  83 C0 30				add eax, 30h
-						INVOKE CharToBuffer, ((COLS - 1) / 2), ((ROWS - 1) / 2), ax, COR_MENU
+ 0000012D  83 C0 30				add eax, 30h ;//Transforma um int em um caracter ascii
+						INVOKE CharToBuffer, ((COLS - 1) / 2), ((ROWS - 1) / 2), ax, COR_MENU ;//Coloca o caracter no buffer
  00000130  6A 0F	   *	    push   +00000000Fh
  00000132  83 EC 02	   *	    sub    esp, 002h
  00000135  66| 50	   *	    push   ax
@@ -627,105 +767,114 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  00000139  6A 3B	   *	    push   +00000003Bh
  0000013B  E8 000002BC	   *	    call   CharToBuffer
 						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 00000140  68 00003E4A R   *	    push   OFFSET region
- 00000145  FF 35 00003E46 R *	    push   dword  ptr bufferCoord
- 0000014B  FF 35 00003E42 R *	    push   dword  ptr bufferSize
- 00000151  68 00000602 R   *	    push   OFFSET buffer
- 00000156  FF 35 000005FE R *	    push   console
+ 00000140  68 00003F62 R   *	    push   OFFSET region
+ 00000145  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
+ 0000014B  FF 35 00003F5A R *	    push   dword  ptr bufferSize
+ 00000151  68 0000071A R   *	    push   OFFSET buffer
+ 00000156  FF 35 00000716 R *	    push   console
  0000015C  E8 00000000 E   *	    call   WriteConsoleOutputA
-						INVOKE Sleep, 900
+						INVOKE Sleep, 900 ;//Espera um pouco menos de um segundo
  00000161  68 00000384	   *	    push   +000000384h
  00000166  E8 00000000 E   *	    call   Sleep
  0000016B  4E					dec esi
- 0000016C  83 FE 01				cmp esi, 1
+ 0000016C  83 FE 01				cmp esi, 1 ;//Verifica se a contagem passou de 1 (para baixo)
  0000016F  7D BA				jge REGRESSIVA
-					
+					;//-----------------------------------------------------------------------------------------
 
+
+					;//Estado jogo (ou estado Fase)
+					;//-----------------------------------------------------------------------------------------------------------------------------------
  00000171				ESTADO_JOGO:
-					INVOKE LimpaBuffer, ELEMENTO_FUNDO, COR_FUNDO
+					INVOKE LimpaBuffer, ELEMENTO_FUNDO, COR_FUNDO ;//Prenche o buffer com elementos inicais de fase
  00000171  6A 60	   *	    push   +000000060h
  00000173  6A 20	   *	    push   +000000020h
  00000175  E8 0000015E	   *	    call   LimpaBuffer
  0000017A					LOOP_JOGO:
-						INVOKE RenderScene, (DADOS_FASE PTR fases[esi]).Endr, (DADOS_FASE PTR fases[esi]).qtdEl, (DADOS_FASE PTR fases[esi]).PosObj
- 0000017A  8A 86 000005EF R *	    mov    al, byte  ptr fases[esi]+006h
+						INVOKE RenderScene, (DADOS_FASE PTR fases[esi]).Endr, (DADOS_FASE PTR fases[esi]).qtdEl, (DADOS_FASE PTR fases[esi]).PosObj ;//Carrega no buffer a fase[esi]
+ 0000017A  8A 86 00000707 R *	    mov    al, byte  ptr fases[esi]+006h
  00000180  50		   *	    push   eax
  00000181  83 EC 02	   *	    sub    esp, 002h
  00000184  66| FF B6
-	   000005ED R	   *	    push   word  ptr fases[esi]+00004h
- 0000018B  FF B6 000005E9 R *	    push   dword  ptr fases[esi]
- 00000191  E8 0000037D	   *	    call   RenderScene
- 00000196  E8 0000016D				call LeTecla
+	   00000705 R	   *	    push   word  ptr fases[esi]+00004h
+ 0000018B  FF B6 00000701 R *	    push   dword  ptr fases[esi]
+ 00000191  E8 00000375	   *	    call   RenderScene
+ 00000196  E8 0000016D				call LeTecla ;//Escuta entrada do usuario
  0000019B  3C 73				cmp al, 's'
  0000019D  0F 84 FFFFFE7B			jz ESTADO_MENU
  000001A3  3C 70				cmp al, 'p'
  000001A5  0F 84 000000E5			jz ESTADO_PAUSA
-						INVOKE MovimentaJogador, OFFSET x, OFFSET y
- 000001AB  68 00003E56 R   *	    push   dword  ptr OFFSET FLAT: y
- 000001B0  68 00003E52 R   *	    push   dword  ptr OFFSET FLAT: x
- 000001B5  E8 0000037E	   *	    call   MovimentaJogador
-						INVOKE ChecaColisao, x, y
- 000001BA  FF 35 00003E56 R *	    push   y
- 000001C0  FF 35 00003E52 R *	    push   x
- 000001C6  E8 000003B4	   *	    call   ChecaColisao
+						INVOKE MovimentaJogador, OFFSET x, OFFSET y ;//Atualiza por referencia a posicao do jogador se o usuario tiver pressionado algum direcional
+ 000001AB  68 00003F6E R   *	    push   dword  ptr OFFSET FLAT: y
+ 000001B0  68 00003F6A R   *	    push   dword  ptr OFFSET FLAT: x
+ 000001B5  E8 00000376	   *	    call   MovimentaJogador
+						INVOKE ChecaColisao, x, y ;//Checa se a nova posicao do personagem nao colidiu com algum elemento
+ 000001BA  FF 35 00003F6E R *	    push   y
+ 000001C0  FF 35 00003F6A R *	    push   x
+ 000001C6  E8 000003AC	   *	    call   ChecaColisao
  000001CB  83 F8 00				cmp eax, 0
- 000001CE  74 37				jz CONTINUE
+ 000001CE  74 37				jz CONTINUE ;//Continua se nao colidiu
  000001D0  83 F8 01				cmp eax, 1
- 000001D3  74 02				jz REINICIA
- 000001D5  EB 73				jmp ESTADO_TROCA_FASE
+ 000001D3  74 02				jz REINICIA ;//Reinicia se colidiu com obstaculo
+ 000001D5  EB 73				jmp ESTADO_TROCA_FASE ;//Troca de fase se colidiu com objetivo
 
  000001D7						REINICIA:
- 000001D7  C7 05 00003E52 R				mov x, INI_X
+ 000001D7  C7 05 00003F6A R				mov x, INI_X ;//Reinicia posicoes
 	   00000077
- 000001E1  C7 05 00003E56 R				mov y, INI_Y
+ 000001E1  C7 05 00003F6E R				mov y, INI_Y
 	   0000000F
-							INVOKE PlaySound, OFFSET fail, NULL, SND_ASYNC
+							INVOKE PlaySound, OFFSET fail, NULL, SND_ASYNC ;//Reproduz som de colisao
  000001EB  FF 35 0000001A R *	    push   SND_ASYNC
  000001F1  6A 00	   *	    push   +000000000h
  000001F3  68 00000026 R   *	    push   dword  ptr OFFSET FLAT: fail
  000001F8  E8 00000000 E   *	    call   PlaySound
- 000001FD  BE 00000000					mov esi, 0
+ 000001FD  BE 00000000					mov esi, 0 ;//Forca fase inicial
  00000202  E9 FFFFFF6A					jmp ESTADO_JOGO
 
  00000207					CONTINUE:
-						INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM;//Imprime o personagem em sua posicao atual
+						INVOKE CharToBuffer, x, y, character, COR_PERSONAGEM ;//Imprime o personagem em sua posicao atual
  00000207  6A 64	   *	    push   +000000064h
  00000209  83 EC 02	   *	    sub    esp, 002h
  0000020C  66| FF 35
 	   00000059 R	   *	    push   character
- 00000213  FF 35 00003E56 R *	    push   y
- 00000219  FF 35 00003E52 R *	    push   x
+ 00000213  FF 35 00003F6E R *	    push   y
+ 00000219  FF 35 00003F6A R *	    push   x
  0000021F  E8 000001D8	   *	    call   CharToBuffer
-						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 00000224  68 00003E4A R   *	    push   OFFSET region
- 00000229  FF 35 00003E46 R *	    push   dword  ptr bufferCoord
- 0000022F  FF 35 00003E42 R *	    push   dword  ptr bufferSize
- 00000235  68 00000602 R   *	    push   OFFSET buffer
- 0000023A  FF 35 000005FE R *	    push   console
+						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region ;//Imprime no console o buffer
+ 00000224  68 00003F62 R   *	    push   OFFSET region
+ 00000229  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
+ 0000022F  FF 35 00003F5A R *	    push   dword  ptr bufferSize
+ 00000235  68 0000071A R   *	    push   OFFSET buffer
+ 0000023A  FF 35 00000716 R *	    push   console
  00000240  E8 00000000 E   *	    call   WriteConsoleOutputA
  00000245  E9 FFFFFF30				jmp LOOP_JOGO
+					;//-----------------------------------------------------------------------------------------------------------------------------------
 
+
+					;//Estado troca fase
+					;//------------------------------------------------------
  0000024A				ESTADO_TROCA_FASE:
- 0000024A  83 C6 07			add esi, SIZEOF DADOS_FASE
- 0000024D  83 FE 14			cmp esi, SIZEOF fases - 1
- 00000250  0F 83 FFFFFE5A		jae ESTADO_CREDITOS
- 00000256  C7 05 00003E52 R		mov x, INI_X
+ 0000024A  83 C6 07			add esi, SIZEOF DADOS_FASE ;//Incrementa o indice para o vetor de fases
+ 0000024D  83 FE 14			cmp esi, SIZEOF fases - 1 ;//Verifica se ha proxima fase no vetor de fases
+ 00000250  0F 83 FFFFFE5A		jae ESTADO_CREDITOS ;//Se nao ha proxima fase, finalizar o jogo
+ 00000256  C7 05 00003F6A R		mov x, INI_X ;//Havendo proxima fase, reiniciar posicao do personagem, 
 	   00000077
- 00000260  C7 05 00003E56 R		mov y, INI_Y
+ 00000260  C7 05 00003F6E R		mov y, INI_Y
 	   0000000F
-					INVOKE PlaySound,NULL,NULL,SND_ASYNC
+					INVOKE PlaySound,NULL,NULL,SND_ASYNC ;//reproduzir som de passagem
  0000026A  FF 35 0000001A R *	    push   SND_ASYNC
  00000270  6A 00	   *	    push   +000000000h
  00000272  6A 00	   *	    push   +000000000h
  00000274  E8 00000000 E   *	    call   PlaySound
-					INVOKE PlaySound, OFFSET prox_fasew, NULL, SND_ASYNC
+					INVOKE PlaySound, OFFSET prox_fasew, NULL, SND_ASYNC ;//reproduzir som de passagem
  00000279  FF 35 0000001A R *	    push   SND_ASYNC
  0000027F  6A 00	   *	    push   +000000000h
  00000281  68 00000032 R   *	    push   dword  ptr OFFSET FLAT: prox_fasew
  00000286  E8 00000000 E   *	    call   PlaySound
- 0000028B  E9 FFFFFEE1			jmp ESTADO_JOGO
+ 0000028B  E9 FFFFFEE1			jmp ESTADO_JOGO ;//Retorna ao jogo
+					;//------------------------------------------------------
 
-
+					;//Estado pausa -> apenas para a mudanca do mapa e do personagem
+					;//------------------------------------------------------
  00000290				ESTADO_PAUSA:
  00000290  E8 00000073			call LeTecla
  00000295  3C 73			cmp al, 's'
@@ -733,6 +882,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000029D  3C 70			cmp al, 'p'
  0000029F  0F 84 FFFFFED5		jz LOOP_JOGO
  000002A5  EB E9			jmp ESTADO_PAUSA
+					;//------------------------------------------------------
 
  000002A7				SAIR:
 					INVOKE LimpaBuffer, 0, COR_MENU
@@ -740,11 +890,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  000002A9  6A 00	   *	    push   +000000000h
  000002AB  E8 00000028	   *	    call   LimpaBuffer
 					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 000002B0  68 00003E4A R   *	    push   OFFSET region
- 000002B5  FF 35 00003E46 R *	    push   dword  ptr bufferCoord
- 000002BB  FF 35 00003E42 R *	    push   dword  ptr bufferSize
- 000002C1  68 00000602 R   *	    push   OFFSET buffer
- 000002C6  FF 35 000005FE R *	    push   console
+ 000002B0  68 00003F62 R   *	    push   OFFSET region
+ 000002B5  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
+ 000002BB  FF 35 00003F5A R *	    push   dword  ptr bufferSize
+ 000002C1  68 0000071A R   *	    push   OFFSET buffer
+ 000002C6  FF 35 00000716 R *	    push   console
  000002CC  E8 00000000 E   *	    call   WriteConsoleOutputA
 
 					exit
@@ -752,7 +902,12 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  000002D3  E8 00000000 E   *	    call   ExitProcess
  000002D8			main ENDP
 
+				;//-------------------------------------- Funcoes do jogo ---------------------------------------------
 
+				;//LimpaBuffer: Preenche o buffer com o elemento informado
+				;//		Parametros: - elBuff -> char a ser usado no preenchimento 
+				;//					- crBuff -> cor do char
+				;//		Retorno: --
  000002D8			LimpaBuffer PROC USES eax esi elBuff: WORD, crBuff: WORD
  000002D8  55		   *	    push   ebp
  000002D9  8B EC	   *	    mov    ebp, esp
@@ -782,8 +937,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  00000308			LimpaBuffer ENDP
 
 
+				;//LeTecla: Aguarda um tempo fixo para a entrada do jogador. Retorna a entrada se houver
+				;//		Parametros:  --
+				;//		Retorno:  - eax -> valor de ReadKey se houve tecla pressionada, 0 se nao houve
  00000308			LeTecla PROC
- 00000308  B8 00000019			mov eax, 25
+ 00000308  B8 00000019			mov eax, DELAY_ENTRADA
  0000030D  E8 00000000 E		call Delay
  00000312  E8 00000000 E		call ReadKey
  00000317  74 01			jz SEM_TECLA
@@ -796,6 +954,13 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000031F  EB F8			jmp RETORNA
  00000321			LeTecla ENDP
 
+
+				;//StringParaBuffer: insere no buffer uma string inteira (com cor personalizavel), a partir das posicoes x e y informadas
+					;//		Parametros: - endString -> endereco para uma string 
+					;//					- stX -> posicao x onde comecar o preenchimento
+					;//					- stY -> posicao y onde comecar o preenchimento
+					;//					- corSt -> cor dos caracteres da string
+					;//		Retorno: --
  00000321			StringParaBuffer PROC USES edx esi eax endString: DWORD, stX: DWORD, stY: DWORD, corSt: WORD
  00000321  55		   *	    push   ebp
  00000322  8B EC	   *	    mov    ebp, esp
@@ -805,7 +970,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  00000327  8B 55 08			mov edx, endString
  0000032A  8B 75 0C			mov esi, stX
 
- 0000032D				ETP1:
+ 0000032D				ETP1: ;//Ate ser encontrado o finalizador 0
  0000032D  0F B6 02			movzx eax, BYTE PTR [edx]
  00000330  83 F8 00			cmp eax, 0
  00000333  74 19			je ENDST
@@ -830,6 +995,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  00000352  C2 0010	   *	    ret    00010h
  00000355			StringParaBuffer ENDP
 
+
+				;//ExibeMenu: carrega no buffer o menu inicial do jogo, dado um array de strings e a quantidade de SSTRINGs
+					;//		Parametros: - endMenu -> endereco para um vetor de SSTRINGs 
+					;//					- tamMenu -> tamanho do vetor de SSTRINGs
+					;//		Retorno: --
  00000355			ExibeMenu PROC USES eax esi edx ecx endMenu: DWORD, tamMenu: BYTE
  00000355  55		   *	    push   ebp
  00000356  8B EC	   *	    mov    ebp, esp
@@ -851,7 +1021,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  00000370  B9 00000078			mov ecx, COLS
  00000375  66| 2B 4C F0			sub cx, WORD PTR (SSTRING PTR [eax + esi * SSTRING]).TmString
 	   04
- 0000037A  D1 E9			shr ecx, 1
+ 0000037A  D1 E9			shr ecx, 1 ;//Centraliza texto: (tamMapa - tamString)/2
 					INVOKE StringParaBuffer, edx, ecx, esi, (SSTRING PTR[eax + esi * SSTRING]).CorString
  0000037C  83 EC 02	   *	    sub    esp, 002h
  0000037F  66| FF 74 F0
@@ -874,14 +1044,16 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  00000397  C2 0008	   *	    ret    00008h
  0000039A			ExibeMenu ENDP
 
-
+				;//MontaGridMapa: atualiza o buffer com o grid padrao de uma fase
+					;//		Parametros: --
+					;//		Retorno: --
  0000039A			MontaGridMapa PROC USES eax ecx edx
  0000039A  50		   *	    push   eax
  0000039B  51		   *	    push   ecx
  0000039C  52		   *	    push   edx
  0000039D  33 C0		    xor eax, eax	;//EAX = 0
 
- 0000039F				LINHA1:
+ 0000039F				LINHA1: ;//Primeira linha contendo obstaculos
 					INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
  0000039F  6A 6F	   *	    push   +00000006Fh
  000003A1  6A 23	   *	    push   +000000023h
@@ -892,7 +1064,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  000003AC  83 F8 78			cmp eax, COLS
  000003AF  7C EE			jl LINHA1
 
- 000003B1				COLUNAS:
+ 000003B1				COLUNAS: ;//Primeira e ultima colunas contendo obstaculos
 					INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
  000003B1  6A 6F	   *	    push   +00000006Fh
  000003B3  6A 23	   *	    push   +000000023h
@@ -910,7 +1082,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  000003CD  3D 00000D5E			cmp eax, (ROWS - 1)*(COLS - 2)
  000003D2  7C DD			jl COLUNAS
 
- 000003D4				LINHANROWS:
+ 000003D4				LINHANROWS: ;//Ultima linha contendo obstaculos
 					INVOKE CharToBuffer, eax, 0, ELEMENTO_OBSTACULO, COR_OBSTACULO
  000003D4  6A 6F	   *	    push   +00000006Fh
  000003D6  6A 23	   *	    push   +000000023h
@@ -937,6 +1109,12 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  000003FC			MontaGridMapa ENDP
 
 
+				;//CharToBuffer: insere no buffer um dado char com uma dada cor, nas posicoes x e y informadas
+					;//		Parametros: - bufx -> posicao x onde inserir o char, inteiro
+					;//					- bufy -> posicao y onde inserir o char, inteiro
+					;//					- char -> char a ser inserido
+					;//					- cor -> cor do char a ser inserido
+					;//		Retorno: --
  000003FC			CharToBuffer PROC USES eax edx bufx: DWORD, bufy: DWORD, char: WORD, cor: WORD
  000003FC  55		   *	    push   ebp
  000003FD  8B EC	   *	    mov    ebp, esp
@@ -948,10 +1126,10 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000040B  03 45 08		    add eax, bufx
  0000040E  66| 8B 55 10		    mov dx, char
  00000412  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Char, dx
-	   00000602 R
+	   0000071A R
  0000041A  66| 8B 55 14			mov dx, cor
  0000041E  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Attributes, dx
-	   00000604 R
+	   0000071C R
 				    ret
  00000426  5A		   *	    pop    edx
  00000427  58		   *	    pop    eax
@@ -960,6 +1138,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000042C			CharToBuffer ENDP
 
 
+				;//AtualizaFase: dada uma fase, seu tamanho e posicao de objetivo, atualiza a posicao dos obstaculos moveis
+				;//		Parametros: - pFase -> endereco do array de OBSTACULO_FASE 
+				;//					- cFase -> tamanho do array
+				;//					- pObj -> posicao y do objetivo na fase
+				;//		Retorno: --
  0000042C			AtualizaFase PROC USES eax ecx edx pFase: DWORD, cFase: WORD, pObj: BYTE
  0000042C  55		   *	    push   ebp
  0000042D  8B EC	   *	    mov    ebp, esp
@@ -981,7 +1164,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000044D  E8 FFFFFFAA	   *	    call   CharToBuffer
 					INVOKE AtualizaObstaculo, edx ;//Atualiza a posição do obstáculo
  00000452  52		   *	    push   edx
- 00000453  E8 0000002F	   *	    call   AtualizaObstaculo
+ 00000453  E8 00000027	   *	    call   AtualizaObstaculo
 					INVOKE CharToBuffer, (OBSTACULO_FASE PTR [edx]).X, DWORD PTR (OBSTACULO_FASE PTR [edx]).Y, ELEMENTO_OBSTACULO, COR_OBSTACULO
  00000458  6A 6F	   *	    push   +00000006Fh
  0000045A  6A 23	   *	    push   +000000023h
@@ -992,241 +1175,260 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
  0000046A  E2 D7			loop ATUALIZACAO
 
 					;//Bloco do objetivo
- 0000046C  66| C7 04 85			mov buffer[eax * CHAR_INFO].Char, ELEMENTO_OBJETIVO
-	   00000602 R
-	   004F
- 00000476  66| C7 04 85			mov buffer[eax * CHAR_INFO].Attributes, COR_OBJETIVO
-	   00000604 R
-	   006B
+					INVOKE CharToBuffer, eax, 0, ELEMENTO_OBJETIVO, COR_OBJETIVO
+ 0000046C  6A 6B	   *	    push   +00000006Bh
+ 0000046E  6A 4F	   *	    push   +00000004Fh
+ 00000470  6A 00	   *	    push   +000000000h
+ 00000472  50		   *	    push   eax
+ 00000473  E8 FFFFFF84	   *	    call   CharToBuffer
 
 					ret
- 00000480  5A		   *	    pop    edx
- 00000481  59		   *	    pop    ecx
- 00000482  58		   *	    pop    eax
- 00000483  C9		   *	    leave  
- 00000484  C2 000C	   *	    ret    0000Ch
- 00000487			AtualizaFase ENDP
-
- 00000487			AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
-
- 00000487  55		   *	    push   ebp
- 00000488  8B EC	   *	    mov    ebp, esp
- 0000048A  50		   *	    push   eax
- 0000048B  52		   *	    push   edx
- 0000048C  51		   *	    push   ecx
- 0000048D  53		   *	    push   ebx
- 0000048E  56		   *	    push   esi
- 0000048F  8B 55 08			mov edx, pObstaculo
-
- 00000492  8B 5A 01			mov ebx, DWORD PTR(OBSTACULO_FASE PTR[edx]).X
- 00000495  8B 4A 05			mov ecx, DWORD PTR(OBSTACULO_FASE PTR[edx]).Y
- 00000498  0F B6 32			movzx esi, BYTE PTR (OBSTACULO_FASE PTR [edx]).Movimento
- 0000049B  83 FE 00			cmp esi, 0
- 0000049E  74 14			jz case0
- 000004A0  83 FE 01			cmp esi, 1
- 000004A3  74 11			jz case1
- 000004A5  83 FE 02			cmp esi, 2
- 000004A8  74 20			jz case2
- 000004AA  83 FE 03			cmp esi, 3
- 000004AD  74 2F			jz case3
- 000004AF  83 FE 04			cmp esi, 4
- 000004B2  74 3E			jz case4
+ 00000478  5A		   *	    pop    edx
+ 00000479  59		   *	    pop    ecx
+ 0000047A  58		   *	    pop    eax
+ 0000047B  C9		   *	    leave  
+ 0000047C  C2 000C	   *	    ret    0000Ch
+ 0000047F			AtualizaFase ENDP
 
 
- 000004B4				case0:
- 000004B4  EB 4E			jmp FIM
+				;//AtualizaObstaculo: atualiza a posicao de um obstaculo especifico
+					;//		Parametros: - pObstaculo -> endereco de memoria do OBSTACULO_FASE
+					;//		Retorno: --
+ 0000047F			AtualizaObstaculo PROC USES eax edx ecx ebx esi pObstaculo: DWORD
 
- 000004B6				case1:
- 000004B6  41				inc ecx
+ 0000047F  55		   *	    push   ebp
+ 00000480  8B EC	   *	    mov    ebp, esp
+ 00000482  50		   *	    push   eax
+ 00000483  52		   *	    push   edx
+ 00000484  51		   *	    push   ecx
+ 00000485  53		   *	    push   ebx
+ 00000486  56		   *	    push   esi
+ 00000487  8B 55 08			mov edx, pObstaculo
+
+ 0000048A  8B 5A 01			mov ebx, DWORD PTR(OBSTACULO_FASE PTR[edx]).X
+ 0000048D  8B 4A 05			mov ecx, DWORD PTR(OBSTACULO_FASE PTR[edx]).Y
+ 00000490  0F B6 32			movzx esi, BYTE PTR (OBSTACULO_FASE PTR [edx]).Movimento ;//Checa para onde mover
+ 00000493  83 FE 00			cmp esi, 0
+ 00000496  74 14			jz case0
+ 00000498  83 FE 01			cmp esi, 1
+ 0000049B  74 11			jz case1
+ 0000049D  83 FE 02			cmp esi, 2
+ 000004A0  74 20			jz case2
+ 000004A2  83 FE 03			cmp esi, 3
+ 000004A5  74 2F			jz case3
+ 000004A7  83 FE 04			cmp esi, 4
+ 000004AA  74 3E			jz case4
+
+
+ 000004AC				case0:
+ 000004AC  EB 4E			jmp FIM
+
+ 000004AE				case1:
+ 000004AE  41				inc ecx
 					INVOKE ChecaColisao, ebx, ecx
- 000004B7  51		   *	    push   ecx
- 000004B8  53		   *	    push   ebx
- 000004B9  E8 000000C1	   *	    call   ChecaColisao
- 000004BE  83 F8 00			cmp eax, 0
- 000004C1  75 02			jnz INVERTEY
+ 000004AF  51		   *	    push   ecx
+ 000004B0  53		   *	    push   ebx
+ 000004B1  E8 000000C1	   *	    call   ChecaColisao
+ 000004B6  83 F8 00			cmp eax, 0
+ 000004B9  75 02			jnz INVERTEY
 
- 000004C3  EB 3F			jmp FIM
+ 000004BB  EB 3F			jmp FIM
 
- 000004C5					INVERTEY:
- 000004C5  C6 02 02				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 02h
- 000004C8  EB 3A				jmp FIM
+ 000004BD					INVERTEY:
+ 000004BD  C6 02 02				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 02h
+ 000004C0  EB 3A				jmp FIM
 
- 000004CA				case2:
- 000004CA  49				dec ecx
+ 000004C2				case2:
+ 000004C2  49				dec ecx
 					INVOKE ChecaColisao, ebx, ecx
- 000004CB  51		   *	    push   ecx
- 000004CC  53		   *	    push   ebx
- 000004CD  E8 000000AD	   *	    call   ChecaColisao
- 000004D2  83 F8 00			cmp eax, 0
- 000004D5  75 02			jnz INVERTEY2
+ 000004C3  51		   *	    push   ecx
+ 000004C4  53		   *	    push   ebx
+ 000004C5  E8 000000AD	   *	    call   ChecaColisao
+ 000004CA  83 F8 00			cmp eax, 0
+ 000004CD  75 02			jnz INVERTEY2
 
- 000004D7  EB 2B			jmp FIM
+ 000004CF  EB 2B			jmp FIM
 
- 000004D9					INVERTEY2:
- 000004D9  C6 02 01				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 01h
- 000004DC  EB 26				jmp FIM
+ 000004D1					INVERTEY2:
+ 000004D1  C6 02 01				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 01h
+ 000004D4  EB 26				jmp FIM
 
- 000004DE				case3:
- 000004DE  43				inc ebx
+ 000004D6				case3:
+ 000004D6  43				inc ebx
 					INVOKE ChecaColisao, ebx, ecx
- 000004DF  51		   *	    push   ecx
- 000004E0  53		   *	    push   ebx
- 000004E1  E8 00000099	   *	    call   ChecaColisao
- 000004E6  83 F8 00			cmp eax, 0
- 000004E9  75 02			jnz INVERTEX
+ 000004D7  51		   *	    push   ecx
+ 000004D8  53		   *	    push   ebx
+ 000004D9  E8 00000099	   *	    call   ChecaColisao
+ 000004DE  83 F8 00			cmp eax, 0
+ 000004E1  75 02			jnz INVERTEX
 
- 000004EB  EB 17			jmp FIM
+ 000004E3  EB 17			jmp FIM
 
- 000004ED					INVERTEX:
- 000004ED  C6 02 04				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 04h
- 000004F0  EB 12				jmp FIM
+ 000004E5					INVERTEX:
+ 000004E5  C6 02 04				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 04h
+ 000004E8  EB 12				jmp FIM
 
- 000004F2				case4:
- 000004F2  4B				dec ebx
+ 000004EA				case4:
+ 000004EA  4B				dec ebx
 					INVOKE ChecaColisao, ebx, ecx
- 000004F3  51		   *	    push   ecx
- 000004F4  53		   *	    push   ebx
- 000004F5  E8 00000085	   *	    call   ChecaColisao
- 000004FA  83 F8 00			cmp eax, 0
- 000004FD  75 02			jnz INVERTEX2
+ 000004EB  51		   *	    push   ecx
+ 000004EC  53		   *	    push   ebx
+ 000004ED  E8 00000085	   *	    call   ChecaColisao
+ 000004F2  83 F8 00			cmp eax, 0
+ 000004F5  75 02			jnz INVERTEX2
 
- 000004FF  EB 03			jmp FIM
+ 000004F7  EB 03			jmp FIM
 
- 00000501					INVERTEX2:
- 00000501  C6 02 03				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 03h
+ 000004F9					INVERTEX2:
+ 000004F9  C6 02 03				mov BYTE PTR (OBSTACULO_FASE PTR[edx]).Movimento, 03h
 
 
- 00000504				FIM:
- 00000504  89 5A 01			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
- 00000507  89 4A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
+ 000004FC				FIM:
+ 000004FC  89 5A 01			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).X, ebx
+ 000004FF  89 4A 05			mov DWORD PTR(OBSTACULO_FASE PTR[edx]).Y, ecx
 					ret
- 0000050A  5E		   *	    pop    esi
- 0000050B  5B		   *	    pop    ebx
- 0000050C  59		   *	    pop    ecx
- 0000050D  5A		   *	    pop    edx
- 0000050E  58		   *	    pop    eax
- 0000050F  C9		   *	    leave  
- 00000510  C2 0004	   *	    ret    00004h
- 00000513			AtualizaObstaculo ENDP
+ 00000502  5E		   *	    pop    esi
+ 00000503  5B		   *	    pop    ebx
+ 00000504  59		   *	    pop    ecx
+ 00000505  5A		   *	    pop    edx
+ 00000506  58		   *	    pop    eax
+ 00000507  C9		   *	    leave  
+ 00000508  C2 0004	   *	    ret    00004h
+ 0000050B			AtualizaObstaculo ENDP
 
- 00000513			RenderScene PROC USES eax edx ecx addrFase: DWORD, tFase: WORD, psObj: BYTE
- 00000513  55		   *	    push   ebp
- 00000514  8B EC	   *	    mov    ebp, esp
- 00000516  50		   *	    push   eax
- 00000517  52		   *	    push   edx
- 00000518  51		   *	    push   ecx
- 00000519  E8 FFFFFE7C		    call MontaGridMapa ;//Grid padrao do mapa
+
+				;//RenderScene: carrega no buffer o grid e mapa atual do jogo, dada uma fase, seu tamanho e a posicao do objetivo
+					;//		Parametros: - addrFase -> endereco de uma fase (vetor de obstaculos) 
+					;//					- tFase -> tamanho da fase
+					;//					- psObj -> posicao em y do objetivo na fase
+					;//		Retorno: --
+ 0000050B			RenderScene PROC USES eax edx ecx addrFase: DWORD, tFase: WORD, psObj: BYTE
+ 0000050B  55		   *	    push   ebp
+ 0000050C  8B EC	   *	    mov    ebp, esp
+ 0000050E  50		   *	    push   eax
+ 0000050F  52		   *	    push   edx
+ 00000510  51		   *	    push   ecx
+ 00000511  E8 FFFFFE84		    call MontaGridMapa ;//Grid padrao do mapa
 					INVOKE AtualizaFase, addrFase, tFase, psObj ;//Fase e movimentacao dos obstaculos
- 0000051E  8A 45 10	   *	    mov    al, byte  ptr ss:[ebp]+010h
- 00000521  50		   *	    push   eax
- 00000522  83 EC 02	   *	    sub    esp, 002h
- 00000525  66| FF 75 0C	   *	    push   word  ptr ss:[ebp]+0000Ch
- 00000529  FF 75 08	   *	    push   dword  ptr ss:[ebp]+000000008h
- 0000052C  E8 FFFFFEFB	   *	    call   AtualizaFase
+ 00000516  8A 45 10	   *	    mov    al, byte  ptr ss:[ebp]+010h
+ 00000519  50		   *	    push   eax
+ 0000051A  83 EC 02	   *	    sub    esp, 002h
+ 0000051D  66| FF 75 0C	   *	    push   word  ptr ss:[ebp]+0000Ch
+ 00000521  FF 75 08	   *	    push   dword  ptr ss:[ebp]+000000008h
+ 00000524  E8 FFFFFF03	   *	    call   AtualizaFase
 				    ret
- 00000531  59		   *	    pop    ecx
- 00000532  5A		   *	    pop    edx
- 00000533  58		   *	    pop    eax
- 00000534  C9		   *	    leave  
- 00000535  C2 000C	   *	    ret    0000Ch
+ 00000529  59		   *	    pop    ecx
+ 0000052A  5A		   *	    pop    edx
+ 0000052B  58		   *	    pop    eax
+ 0000052C  C9		   *	    leave  
+ 0000052D  C2 000C	   *	    ret    0000Ch
 
- 00000538			RenderScene ENDP
+ 00000530			RenderScene ENDP
 
- 00000538			MovimentaJogador PROC USES ecx edx px: DWORD, py: DWORD
+				;//MovimentaJogador: move o personagem principal para as posicoes x e y dadas
+					;//		Parametros: - px -> endereco da variavel de posicao atual x do personagem
+					;//					- py -> endereco da variavel de posical atual y do personagem
+					;//		Retorno: --
+ 00000530			MovimentaJogador PROC USES ecx edx px: DWORD, py: DWORD
 					
- 00000538  55		   *	    push   ebp
- 00000539  8B EC	   *	    mov    ebp, esp
- 0000053B  51		   *	    push   ecx
- 0000053C  52		   *	    push   edx
- 0000053D  83 F8 00			cmp eax, 0
- 00000540  74 37			jz RESUME
+ 00000530  55		   *	    push   ebp
+ 00000531  8B EC	   *	    mov    ebp, esp
+ 00000533  51		   *	    push   ecx
+ 00000534  52		   *	    push   edx
+ 00000535  83 F8 00			cmp eax, 0
+ 00000538  74 37			jz RESUME
 
- 00000542  8B 55 0C			mov edx, py
- 00000545  8B 4D 08			mov ecx, px
+ 0000053A  8B 55 0C			mov edx, py
+ 0000053D  8B 4D 08			mov ecx, px
 
 					INVOKE CharToBuffer, [ecx], [edx], ELEMENTO_FUNDO, COR_FUNDO ;//Limpa posicao atual
- 00000548  6A 60	   *	    push   +000000060h
- 0000054A  6A 20	   *	    push   +000000020h
- 0000054C  FF 32	   *	    push   dword  ptr [edx]
- 0000054E  FF 31	   *	    push   dword  ptr [ecx]
- 00000550  E8 FFFFFEA7	   *	    call   CharToBuffer
+ 00000540  6A 60	   *	    push   +000000060h
+ 00000542  6A 20	   *	    push   +000000020h
+ 00000544  FF 32	   *	    push   dword  ptr [edx]
+ 00000546  FF 31	   *	    push   dword  ptr [ecx]
+ 00000548  E8 FFFFFEAF	   *	    call   CharToBuffer
 
- 00000555  80 FC 50			cmp ah, 50h
- 00000558  74 1D			jz INCREMENTO_Y ;//Cima
- 0000055A  80 FC 48			cmp ah, 48h
- 0000055D  74 0C			jz DECREMENTO_Y ;//Baixo
- 0000055F  80 FC 4D			cmp ah, 4Dh
- 00000562  74 0F			jz INCREMENTO_X ;//Direita
- 00000564  80 FC 4B			cmp ah, 4Bh
- 00000567  74 06			jz DECREMENTO_X ;//Esquerda
- 00000569  EB 0E			jmp RESUME
+ 0000054D  80 FC 50			cmp ah, 50h
+ 00000550  74 1D			jz INCREMENTO_Y ;//Cima
+ 00000552  80 FC 48			cmp ah, 48h
+ 00000555  74 0C			jz DECREMENTO_Y ;//Baixo
+ 00000557  80 FC 4D			cmp ah, 4Dh
+ 0000055A  74 0F			jz INCREMENTO_X ;//Direita
+ 0000055C  80 FC 4B			cmp ah, 4Bh
+ 0000055F  74 06			jz DECREMENTO_X ;//Esquerda
+ 00000561  EB 0E			jmp RESUME
 
- 0000056B				DECREMENTO_Y :
- 0000056B  FF 0A			dec DWORD PTR [edx]
- 0000056D  EB 0A			jmp RESUME
+ 00000563				DECREMENTO_Y :
+ 00000563  FF 0A			dec DWORD PTR [edx]
+ 00000565  EB 0A			jmp RESUME
 
- 0000056F				DECREMENTO_X :
- 0000056F  FF 09			dec DWORD PTR[ecx]
- 00000571  EB 06			jmp RESUME
+ 00000567				DECREMENTO_X :
+ 00000567  FF 09			dec DWORD PTR[ecx]
+ 00000569  EB 06			jmp RESUME
 
- 00000573				INCREMENTO_X :
- 00000573  FF 01			inc DWORD PTR[ecx]
- 00000575  EB 02			jmp RESUME
+ 0000056B				INCREMENTO_X :
+ 0000056B  FF 01			inc DWORD PTR[ecx]
+ 0000056D  EB 02			jmp RESUME
 
- 00000577				INCREMENTO_Y :
- 00000577  FF 02			inc DWORD PTR[edx]
+ 0000056F				INCREMENTO_Y :
+ 0000056F  FF 02			inc DWORD PTR[edx]
 
- 00000579				RESUME:
+ 00000571				RESUME:
 					ret
- 00000579  5A		   *	    pop    edx
- 0000057A  59		   *	    pop    ecx
- 0000057B  C9		   *	    leave  
- 0000057C  C2 0008	   *	    ret    00008h
- 0000057F			MovimentaJogador ENDP
+ 00000571  5A		   *	    pop    edx
+ 00000572  59		   *	    pop    ecx
+ 00000573  C9		   *	    leave  
+ 00000574  C2 0008	   *	    ret    00008h
+ 00000577			MovimentaJogador ENDP
 
- 0000057F			ChecaColisao PROC USES edx ecx px: DWORD, py: DWORD
- 0000057F  55		   *	    push   ebp
- 00000580  8B EC	   *	    mov    ebp, esp
- 00000582  52		   *	    push   edx
- 00000583  51		   *	    push   ecx
- 00000584  8B 45 0C		    mov eax, py
- 00000587  BA 00000078		    mov edx, COLS
- 0000058C  F7 E2		    mul edx
- 0000058E  03 45 08		    add eax, px
- 00000591  0F B7 0C 85			movzx ecx, buffer[eax * CHAR_INFO].Char
-	   00000602 R
- 00000599  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ' '
-	   00000602 R 20
- 000005A2  74 22		    jz NAO_COLIDIU
- 000005A4  66| 81 3C 85		    cmp buffer[eax * CHAR_INFO].Char, 0FEh ;//Garantir que o personagem nao 'colida' consigo mesmo
-	   00000602 R
+
+				;//ChecaColisao: checa se um elemento do mapa colidiu com algum outro elemento
+					;//		Parametros: - px -> posicao x do elemento
+					;//					- py -> posicao y do elemento
+					;//		Retorno: - eax -> 0 se nao colidiu, 1 se colidiu com obstaculo e 2 se colidiu com objetivo
+ 00000577			ChecaColisao PROC USES edx ecx px: DWORD, py: DWORD
+ 00000577  55		   *	    push   ebp
+ 00000578  8B EC	   *	    mov    ebp, esp
+ 0000057A  52		   *	    push   edx
+ 0000057B  51		   *	    push   ecx
+ 0000057C  8B 45 0C		    mov eax, py
+ 0000057F  BA 00000078		    mov edx, COLS
+ 00000584  F7 E2		    mul edx
+ 00000586  03 45 08		    add eax, px
+ 00000589  0F B7 0C 85			movzx ecx, buffer[eax * CHAR_INFO].Char
+	   0000071A R
+ 00000591  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ' '
+	   0000071A R 20
+ 0000059A  74 22		    jz NAO_COLIDIU
+ 0000059C  66| 81 3C 85		    cmp buffer[eax * CHAR_INFO].Char, 0FEh ;//Garantir que o personagem nao 'colida' consigo mesmo
+	   0000071A R
 	   00FE
- 000005AE  74 16		    jz NAO_COLIDIU
- 000005B0  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	   00000602 R 23
- 000005B9  74 12		    jz COLIDIU_OBSTACULO
- 000005BB  B8 00000002		    mov eax, 2 ;//Colidiu com o objetivo
- 000005C0			RESUME2:
+ 000005A6  74 16		    jz NAO_COLIDIU
+ 000005A8  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
+	   0000071A R 23
+ 000005B1  74 12		    jz COLIDIU_OBSTACULO
+ 000005B3  B8 00000002		    mov eax, 2 ;//Colidiu com o objetivo
+ 000005B8			RESUME2:
 				    ret
- 000005C0  59		   *	    pop    ecx
- 000005C1  5A		   *	    pop    edx
- 000005C2  C9		   *	    leave  
- 000005C3  C2 0008	   *	    ret    00008h
+ 000005B8  59		   *	    pop    ecx
+ 000005B9  5A		   *	    pop    edx
+ 000005BA  C9		   *	    leave  
+ 000005BB  C2 0008	   *	    ret    00008h
 
- 000005C6			NAO_COLIDIU:
- 000005C6  B8 00000000		    mov eax, 0
- 000005CB  EB F3		    jmp RESUME2
+ 000005BE			NAO_COLIDIU:
+ 000005BE  B8 00000000		    mov eax, 0
+ 000005C3  EB F3		    jmp RESUME2
 
- 000005CD			COLIDIU_OBSTACULO:
- 000005CD  B8 00000001		    mov eax, 1
- 000005D2  EB EC		    jmp RESUME2
+ 000005C5			COLIDIU_OBSTACULO:
+ 000005C5  B8 00000001		    mov eax, 1
+ 000005CA  EB EC		    jmp RESUME2
 
 
- 000005D4			ChecaColisao ENDP
+ 000005CC			ChecaColisao ENDP
 
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 16:48:54
-Animation exampl					     Symbols 2 - 1
+Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
+LAbrint						     Symbols 2 - 1
 
 
 
@@ -1337,42 +1539,42 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00003E5A Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 000005D4 Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00003F72 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000005CC Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
 
                 N a m e                 Type     Value    Attr
 
-AtualizaFase . . . . . . . . . .	P Near	 0000042C _TEXT	Length= 0000005B Public STDCALL
+AtualizaFase . . . . . . . . . .	P Near	 0000042C _TEXT	Length= 00000053 Public STDCALL
   pFase  . . . . . . . . . . . .	DWord	 bp + 00000008
   cFase  . . . . . . . . . . . .	Word	 bp + 0000000C
   pObj . . . . . . . . . . . . .	Byte	 bp + 00000010
   ATUALIZACAO  . . . . . . . . .	L Near	 00000443 _TEXT	
-AtualizaObstaculo  . . . . . . .	P Near	 00000487 _TEXT	Length= 0000008C Public STDCALL
+AtualizaObstaculo  . . . . . . .	P Near	 0000047F _TEXT	Length= 0000008C Public STDCALL
   pObstaculo . . . . . . . . . .	DWord	 bp + 00000008
-  case0  . . . . . . . . . . . .	L Near	 000004B4 _TEXT	
-  case1  . . . . . . . . . . . .	L Near	 000004B6 _TEXT	
-  INVERTEY . . . . . . . . . . .	L Near	 000004C5 _TEXT	
-  case2  . . . . . . . . . . . .	L Near	 000004CA _TEXT	
-  INVERTEY2  . . . . . . . . . .	L Near	 000004D9 _TEXT	
-  case3  . . . . . . . . . . . .	L Near	 000004DE _TEXT	
-  INVERTEX . . . . . . . . . . .	L Near	 000004ED _TEXT	
-  case4  . . . . . . . . . . . .	L Near	 000004F2 _TEXT	
-  INVERTEX2  . . . . . . . . . .	L Near	 00000501 _TEXT	
-  FIM  . . . . . . . . . . . . .	L Near	 00000504 _TEXT	
+  case0  . . . . . . . . . . . .	L Near	 000004AC _TEXT	
+  case1  . . . . . . . . . . . .	L Near	 000004AE _TEXT	
+  INVERTEY . . . . . . . . . . .	L Near	 000004BD _TEXT	
+  case2  . . . . . . . . . . . .	L Near	 000004C2 _TEXT	
+  INVERTEY2  . . . . . . . . . .	L Near	 000004D1 _TEXT	
+  case3  . . . . . . . . . . . .	L Near	 000004D6 _TEXT	
+  INVERTEX . . . . . . . . . . .	L Near	 000004E5 _TEXT	
+  case4  . . . . . . . . . . . .	L Near	 000004EA _TEXT	
+  INVERTEX2  . . . . . . . . . .	L Near	 000004F9 _TEXT	
+  FIM  . . . . . . . . . . . . .	L Near	 000004FC _TEXT	
 CharToBuffer . . . . . . . . . .	P Near	 000003FC _TEXT	Length= 00000030 Public STDCALL
   bufx . . . . . . . . . . . . .	DWord	 bp + 00000008
   bufy . . . . . . . . . . . . .	DWord	 bp + 0000000C
   char . . . . . . . . . . . . .	Word	 bp + 00000010
   cor  . . . . . . . . . . . . .	Word	 bp + 00000014
-ChecaColisao . . . . . . . . . .	P Near	 0000057F _TEXT	Length= 00000055 Public STDCALL
+ChecaColisao . . . . . . . . . .	P Near	 00000577 _TEXT	Length= 00000055 Public STDCALL
   px . . . . . . . . . . . . . .	DWord	 bp + 00000008
   py . . . . . . . . . . . . . .	DWord	 bp + 0000000C
-  RESUME2  . . . . . . . . . . .	L Near	 000005C0 _TEXT	
-  NAO_COLIDIU  . . . . . . . . .	L Near	 000005C6 _TEXT	
-  COLIDIU_OBSTACULO  . . . . . .	L Near	 000005CD _TEXT	
+  RESUME2  . . . . . . . . . . .	L Near	 000005B8 _TEXT	
+  NAO_COLIDIU  . . . . . . . . .	L Near	 000005BE _TEXT	
+  COLIDIU_OBSTACULO  . . . . . .	L Near	 000005C5 _TEXT	
 CloseFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 Clrscr . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -1431,14 +1633,14 @@ MontaGridMapa  . . . . . . . . .	P Near	 0000039A _TEXT	Length= 00000062 Public 
   LINHA1 . . . . . . . . . . . .	L Near	 0000039F _TEXT	
   COLUNAS  . . . . . . . . . . .	L Near	 000003B1 _TEXT	
   LINHANROWS . . . . . . . . . .	L Near	 000003D4 _TEXT	
-MovimentaJogador . . . . . . . .	P Near	 00000538 _TEXT	Length= 00000047 Public STDCALL
+MovimentaJogador . . . . . . . .	P Near	 00000530 _TEXT	Length= 00000047 Public STDCALL
   px . . . . . . . . . . . . . .	DWord	 bp + 00000008
   py . . . . . . . . . . . . . .	DWord	 bp + 0000000C
-  DECREMENTO_Y . . . . . . . . .	L Near	 0000056B _TEXT	
-  DECREMENTO_X . . . . . . . . .	L Near	 0000056F _TEXT	
-  INCREMENTO_X . . . . . . . . .	L Near	 00000573 _TEXT	
-  INCREMENTO_Y . . . . . . . . .	L Near	 00000577 _TEXT	
-  RESUME . . . . . . . . . . . .	L Near	 00000579 _TEXT	
+  DECREMENTO_Y . . . . . . . . .	L Near	 00000563 _TEXT	
+  DECREMENTO_X . . . . . . . . .	L Near	 00000567 _TEXT	
+  INCREMENTO_X . . . . . . . . .	L Near	 0000056B _TEXT	
+  INCREMENTO_Y . . . . . . . . .	L Near	 0000056F _TEXT	
+  RESUME . . . . . . . . . . . .	L Near	 00000571 _TEXT	
 MsgBoxAsk  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 MsgBox . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 OpenInputFile  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -1461,7 +1663,7 @@ ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-RenderScene  . . . . . . . . . .	P Near	 00000513 _TEXT	Length= 00000025 Public STDCALL
+RenderScene  . . . . . . . . . .	P Near	 0000050B _TEXT	Length= 00000025 Public STDCALL
   addrFase . . . . . . . . . . .	DWord	 bp + 00000008
   tFase  . . . . . . . . . . . .	Word	 bp + 0000000C
   psObj  . . . . . . . . . . . .	Byte	 bp + 00000010
@@ -1548,6 +1750,7 @@ Symbols:
 ALT_MASK . . . . . . . . . . . .	Number	 00000003h   
 CAPSLOCK_ON  . . . . . . . . . .	Number	 00000080h   
 COLS . . . . . . . . . . . . . .	Number	 00000078h   
+CONTAGEM . . . . . . . . . . . .	Number	 00000005h   
 COR_FUNDO  . . . . . . . . . . .	Number	 00000060h   
 COR_MENU . . . . . . . . . . . .	Number	 0000000Fh   
 COR_OBJETIVO . . . . . . . . . .	Number	 0000006Bh   
@@ -1558,6 +1761,7 @@ CREATE_ALWAYS  . . . . . . . . .	Number	 00000002h
 CREATE_NEW . . . . . . . . . . .	Number	 00000001h   
 CTRL_MASK  . . . . . . . . . . .	Number	 0000000Ch   
 CreateFile . . . . . . . . . . .	Text   	 CreateFileA
+DELAY_ENTRADA  . . . . . . . . .	Number	 00000019h   
 DO_NOT_SHARE . . . . . . . . . .	Number	 00000000h   
 ELEMENTO_FUNDO . . . . . . . . .	Number	 00000020h   
 ELEMENTO_OBJETIVO  . . . . . . .	Number	 0000004Fh   
@@ -1766,8 +1970,8 @@ WINDOW_BUFFER_SIZE_EVENT . . . .	Number	 00000004h
 WriteConsoleOutputCharacter  . .	Text   	 WriteConsoleOutputCharacterA
 WriteConsoleOutput . . . . . . .	Text   	 WriteConsoleOutputA
 WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
-aCreditos  . . . . . . . . . . .	SSTRING	 000003A1 _DATA	
-aInstrucoes  . . . . . . . . . .	SSTRING	 00000263 _DATA	
+aCreditos  . . . . . . . . . . .	SSTRING	 000003A2 _DATA	
+aInstrucoes  . . . . . . . . . .	SSTRING	 00000264 _DATA	
 aMenu  . . . . . . . . . . . . .	SSTRING	 000000D2 _DATA	
 addrBLine  . . . . . . . . . . .	Number	 0000005Bh   
 addrRdp2 . . . . . . . . . . . .	Number	 0000006Dh   
@@ -1775,12 +1979,12 @@ addrRdp  . . . . . . . . . . . .	Number	 0000005Dh
 black  . . . . . . . . . . . . .	Number	 00000000h   
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
-bufferCoord  . . . . . . . . . .	COORD	 00003E46 _DATA	
-bufferSize . . . . . . . . . . .	COORD	 00003E42 _DATA	
-buffer . . . . . . . . . . . . .	CHAR_INFO  00000602 _DATA	
+bufferCoord  . . . . . . . . . .	COORD	 00003F5E _DATA	
+bufferSize . . . . . . . . . . .	COORD	 00003F5A _DATA	
+buffer . . . . . . . . . . . . .	CHAR_INFO  0000071A _DATA	
 character  . . . . . . . . . . .	Word	 00000059 _DATA	
 congrats . . . . . . . . . . . .	Byte	 0000003D _DATA	
-console  . . . . . . . . . . . .	DWord	 000005FE _DATA	
+console  . . . . . . . . . . . .	DWord	 00000716 _DATA	
 cpBLine  . . . . . . . . . . . .	Number	 00000001h   
 cpRdp2 . . . . . . . . . . . . .	Number	 0000002Ah   
 cpRdp  . . . . . . . . . . . . .	Number	 00000010h   
@@ -1788,10 +1992,11 @@ cyan . . . . . . . . . . . . . .	Number	 00000003h
 deviceConnect  . . . . . . . . .	Byte	 00000000 _DATA	
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
 fail . . . . . . . . . . . . . .	Byte	 00000026 _DATA	
-fase1  . . . . . . . . . . . . .	OBSTACULO_FASE  000003F1 _DATA	
-fase2  . . . . . . . . . . . . .	OBSTACULO_FASE  00000481 _DATA	
-fase3  . . . . . . . . . . . . .	OBSTACULO_FASE  00000523 _DATA	
-fases  . . . . . . . . . . . . .	DADOS_FASE  000005E9 _DATA	
+fase1  . . . . . . . . . . . . .	OBSTACULO_FASE  000003F2 _DATA	
+fase2  . . . . . . . . . . . . .	OBSTACULO_FASE  000004AF _DATA	
+fase3  . . . . . . . . . . . . .	OBSTACULO_FASE  00000551 _DATA	
+fase4  . . . . . . . . . . . . .	OBSTACULO_FASE  00000617 _DATA	
+fases  . . . . . . . . . . . . .	DADOS_FASE  00000701 _DATA	
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
 lightBlue  . . . . . . . . . . .	Number	 00000009h   
@@ -1804,20 +2009,20 @@ magenta  . . . . . . . . . . . .	Number	 00000005h
 menu_music . . . . . . . . . . .	Byte	 0000004A _DATA	
 prox_fasew . . . . . . . . . . .	Byte	 00000032 _DATA	
 red  . . . . . . . . . . . . . .	Number	 00000004h   
-region . . . . . . . . . . . . .	SMALL_RECT  00003E4A _DATA	
+region . . . . . . . . . . . . .	SMALL_RECT  00003F62 _DATA	
 sBLine . . . . . . . . . . . . .	Byte	 0000005B _DATA	
-sCrdtL1  . . . . . . . . . . . .	Byte	 000002AB _DATA	
-sCrdtL2  . . . . . . . . . . . .	Byte	 000002BF _DATA	
-sCrdtL3  . . . . . . . . . . . .	Byte	 000002FD _DATA	
-sCrdtL4  . . . . . . . . . . . .	Byte	 00000339 _DATA	
-sCrdtL5  . . . . . . . . . . . .	Byte	 00000362 _DATA	
-sCrdtL6  . . . . . . . . . . . .	Byte	 0000037D _DATA	
+sCrdtL1  . . . . . . . . . . . .	Byte	 000002AC _DATA	
+sCrdtL2  . . . . . . . . . . . .	Byte	 000002C0 _DATA	
+sCrdtL3  . . . . . . . . . . . .	Byte	 000002FE _DATA	
+sCrdtL4  . . . . . . . . . . . .	Byte	 0000033A _DATA	
+sCrdtL5  . . . . . . . . . . . .	Byte	 00000363 _DATA	
+sCrdtL6  . . . . . . . . . . . .	Byte	 0000037E _DATA	
 sInstL1  . . . . . . . . . . . .	Byte	 0000011E _DATA	
 sInstL2  . . . . . . . . . . . .	Byte	 0000015D _DATA	
 sInstL3  . . . . . . . . . . . .	Byte	 00000180 _DATA	
-sInstL4  . . . . . . . . . . . .	Byte	 000001E3 _DATA	
-sInstL5  . . . . . . . . . . . .	Byte	 00000224 _DATA	
-sInstL6  . . . . . . . . . . . .	Byte	 0000025A _DATA	
+sInstL4  . . . . . . . . . . . .	Byte	 000001E4 _DATA	
+sInstL5  . . . . . . . . . . . .	Byte	 00000225 _DATA	
+sInstL6  . . . . . . . . . . . .	Byte	 0000025B _DATA	
 sInstrucoes  . . . . . . . . . .	Byte	 00000112 _DATA	
 sMenuInst  . . . . . . . . . . .	Byte	 000000A7 _DATA	
 sMenuJogar . . . . . . . . . . .	Byte	 0000009D _DATA	
@@ -1827,9 +2032,9 @@ sRdp2  . . . . . . . . . . . . .	Byte	 0000006D _DATA
 sRdp . . . . . . . . . . . . . .	Byte	 0000005D _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
-x  . . . . . . . . . . . . . . .	DWord	 00003E52 _DATA	
+x  . . . . . . . . . . . . . . .	DWord	 00003F6A _DATA	
 yellow . . . . . . . . . . . . .	Number	 0000000Eh   
-y  . . . . . . . . . . . . . . .	DWord	 00003E56 _DATA	
+y  . . . . . . . . . . . . . . .	DWord	 00003F6E _DATA	
 
 	   0 Warnings
 	   0 Errors
