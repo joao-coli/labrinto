@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
+Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 23:45:13
 LAbrint						     Page 1 - 1
 
 
@@ -612,30 +612,33 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
 						<2d, 70d, 15d>, <3d, 3d, 5d>, <4d, 2d, 25d>, <3d, 20d, 8d>, <4d, 70d, 20d>, <3d, 10d, 14d>, <4d, 1d, 16d>,
 						<2d, 1d, 5d>, <4d, 1d, 15d>
 
- 00000701 00000617 R 001A		fases DADOS_FASE <OFFSET fase4, LENGTHOF fase4, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>
+ 00000701 000003F2 R 0015		fases DADOS_FASE <OFFSET fase1, LENGTHOF fase1, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>, 
 	   04 000004AF R
 	   0012 12
 	   00000551 R
 	   0016 0F
+	   00000617 R
+	   001A 11
+						<OFFSET fase4, LENGTHOF fase4, 17d>
 					;//------------------------------------------------------------------------------------------------------------------
 
 
 					;//Definicao dos elementos do buffer
 					;//--------------------------------------------------------------
- 00000716 00000000		    console HANDLE 0
- 0000071A  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
+ 0000071D 00000000		    console HANDLE 0
+ 00000721  00000E10 [		    buffer CHAR_INFO ROWS * COLS DUP(<<ELEMENTO_FUNDO>, COR_FUNDO>)
 	    0020 0060
 	   ]
- 00003F5A 0078 001E		    bufferSize COORD <COLS, ROWS>
- 00003F5E 0000 0000		    bufferCoord COORD <0, 0>
- 00003F62 0000 0000 0077	    region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
+ 00003F61 0078 001E		    bufferSize COORD <COLS, ROWS>
+ 00003F65 0000 0000		    bufferCoord COORD <0, 0>
+ 00003F69 0000 0000 0077	    region SMALL_RECT <0, 0, COLS - 1, ROWS - 1>
 	   001D
 					;//--------------------------------------------------------------
 
 
 					;//Definicao das variaveis de posicao do personagem (character)
- 00003F6A 00000077		    x DWORD INI_X; current position
- 00003F6E 0000000F		    y DWORD INI_Y; of the figure
+ 00003F71 00000077		    x DWORD INI_X; current position
+ 00003F75 0000000F		    y DWORD INI_Y; of the figure
 
 
 
@@ -654,7 +657,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
 				    INVOKE GetStdHandle, STD_OUTPUT_HANDLE ;//Cria o manipulador do console
  00000012  6A F5	   *	    push    -00000000Bh
  00000014  E8 00000000 E   *	    call   GetStdHandle
- 00000019  A3 00000716 R	    mov console, eax ;//Salva o manipulador do console
+ 00000019  A3 0000071D R	    mov console, eax ;//Salva o manipulador do console
 					;//--------------------------------------------------------------
 
 					;//Estado menu
@@ -671,11 +674,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  00000032  68 000000D2 R   *	    push   dword  ptr OFFSET FLAT: aMenu
  00000037  E8 00000319	   *	    call   ExibeMenu
 					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region ;//Transfere o buffer para o console
- 0000003C  68 00003F62 R   *	    push   OFFSET region
- 00000041  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
- 00000047  FF 35 00003F5A R *	    push   dword  ptr bufferSize
- 0000004D  68 0000071A R   *	    push   OFFSET buffer
- 00000052  FF 35 00000716 R *	    push   console
+ 0000003C  68 00003F69 R   *	    push   OFFSET region
+ 00000041  FF 35 00003F65 R *	    push   dword  ptr bufferCoord
+ 00000047  FF 35 00003F61 R *	    push   dword  ptr bufferSize
+ 0000004D  68 00000721 R   *	    push   OFFSET buffer
+ 00000052  FF 35 0000071D R *	    push   console
  00000058  E8 00000000 E   *	    call   WriteConsoleOutputA
  0000005D					AGUARDA_MSG_MENU: ;//Espera por entrada do usuario
  0000005D  E8 000002A6				call LeTecla
@@ -697,11 +700,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  0000007A  68 00000264 R   *	    push   dword  ptr OFFSET FLAT: aInstrucoes
  0000007F  E8 000002D1	   *	    call   ExibeMenu
 					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 00000084  68 00003F62 R   *	    push   OFFSET region
- 00000089  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
- 0000008F  FF 35 00003F5A R *	    push   dword  ptr bufferSize
- 00000095  68 0000071A R   *	    push   OFFSET buffer
- 0000009A  FF 35 00000716 R *	    push   console
+ 00000084  68 00003F69 R   *	    push   OFFSET region
+ 00000089  FF 35 00003F65 R *	    push   dword  ptr bufferCoord
+ 0000008F  FF 35 00003F61 R *	    push   dword  ptr bufferSize
+ 00000095  68 00000721 R   *	    push   OFFSET buffer
+ 0000009A  FF 35 0000071D R *	    push   console
  000000A0  E8 00000000 E   *	    call   WriteConsoleOutputA
  000000A5					AGUARDA_MSG_INSTRUCOES: ;//Espera por entrada do usuario
  000000A5  E8 0000025E				call LeTecla
@@ -729,11 +732,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  000000D3  68 000003A2 R   *	    push   dword  ptr OFFSET FLAT: aCreditos
  000000D8  E8 00000278	   *	    call   ExibeMenu
 						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 000000DD  68 00003F62 R   *	    push   OFFSET region
- 000000E2  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
- 000000E8  FF 35 00003F5A R *	    push   dword  ptr bufferSize
- 000000EE  68 0000071A R   *	    push   OFFSET buffer
- 000000F3  FF 35 00000716 R *	    push   console
+ 000000DD  68 00003F69 R   *	    push   OFFSET region
+ 000000E2  FF 35 00003F65 R *	    push   dword  ptr bufferCoord
+ 000000E8  FF 35 00003F61 R *	    push   dword  ptr bufferSize
+ 000000EE  68 00000721 R   *	    push   OFFSET buffer
+ 000000F3  FF 35 0000071D R *	    push   console
  000000F9  E8 00000000 E   *	    call   WriteConsoleOutputA
  000000FE					AGUARDA_MSG_CREDITOS: ;//Espera por entrada do usuario
  000000FE  E8 00000205					call LeTecla
@@ -767,11 +770,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  00000139  6A 3B	   *	    push   +00000003Bh
  0000013B  E8 000002BC	   *	    call   CharToBuffer
 						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 00000140  68 00003F62 R   *	    push   OFFSET region
- 00000145  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
- 0000014B  FF 35 00003F5A R *	    push   dword  ptr bufferSize
- 00000151  68 0000071A R   *	    push   OFFSET buffer
- 00000156  FF 35 00000716 R *	    push   console
+ 00000140  68 00003F69 R   *	    push   OFFSET region
+ 00000145  FF 35 00003F65 R *	    push   dword  ptr bufferCoord
+ 0000014B  FF 35 00003F61 R *	    push   dword  ptr bufferSize
+ 00000151  68 00000721 R   *	    push   OFFSET buffer
+ 00000156  FF 35 0000071D R *	    push   console
  0000015C  E8 00000000 E   *	    call   WriteConsoleOutputA
 						INVOKE Sleep, 900 ;//Espera um pouco menos de um segundo
  00000161  68 00000384	   *	    push   +000000384h
@@ -804,12 +807,12 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  000001A3  3C 70				cmp al, 'p'
  000001A5  0F 84 000000E5			jz ESTADO_PAUSA
 						INVOKE MovimentaJogador, OFFSET x, OFFSET y ;//Atualiza por referencia a posicao do jogador se o usuario tiver pressionado algum direcional
- 000001AB  68 00003F6E R   *	    push   dword  ptr OFFSET FLAT: y
- 000001B0  68 00003F6A R   *	    push   dword  ptr OFFSET FLAT: x
+ 000001AB  68 00003F75 R   *	    push   dword  ptr OFFSET FLAT: y
+ 000001B0  68 00003F71 R   *	    push   dword  ptr OFFSET FLAT: x
  000001B5  E8 00000376	   *	    call   MovimentaJogador
 						INVOKE ChecaColisao, x, y ;//Checa se a nova posicao do personagem nao colidiu com algum elemento
- 000001BA  FF 35 00003F6E R *	    push   y
- 000001C0  FF 35 00003F6A R *	    push   x
+ 000001BA  FF 35 00003F75 R *	    push   y
+ 000001C0  FF 35 00003F71 R *	    push   x
  000001C6  E8 000003AC	   *	    call   ChecaColisao
  000001CB  83 F8 00				cmp eax, 0
  000001CE  74 37				jz CONTINUE ;//Continua se nao colidiu
@@ -818,9 +821,9 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  000001D5  EB 73				jmp ESTADO_TROCA_FASE ;//Troca de fase se colidiu com objetivo
 
  000001D7						REINICIA:
- 000001D7  C7 05 00003F6A R				mov x, INI_X ;//Reinicia posicoes
+ 000001D7  C7 05 00003F71 R				mov x, INI_X ;//Reinicia posicoes
 	   00000077
- 000001E1  C7 05 00003F6E R				mov y, INI_Y
+ 000001E1  C7 05 00003F75 R				mov y, INI_Y
 	   0000000F
 							INVOKE PlaySound, OFFSET fail, NULL, SND_ASYNC ;//Reproduz som de colisao
  000001EB  FF 35 0000001A R *	    push   SND_ASYNC
@@ -836,15 +839,15 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  00000209  83 EC 02	   *	    sub    esp, 002h
  0000020C  66| FF 35
 	   00000059 R	   *	    push   character
- 00000213  FF 35 00003F6E R *	    push   y
- 00000219  FF 35 00003F6A R *	    push   x
+ 00000213  FF 35 00003F75 R *	    push   y
+ 00000219  FF 35 00003F71 R *	    push   x
  0000021F  E8 000001D8	   *	    call   CharToBuffer
 						INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region ;//Imprime no console o buffer
- 00000224  68 00003F62 R   *	    push   OFFSET region
- 00000229  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
- 0000022F  FF 35 00003F5A R *	    push   dword  ptr bufferSize
- 00000235  68 0000071A R   *	    push   OFFSET buffer
- 0000023A  FF 35 00000716 R *	    push   console
+ 00000224  68 00003F69 R   *	    push   OFFSET region
+ 00000229  FF 35 00003F65 R *	    push   dword  ptr bufferCoord
+ 0000022F  FF 35 00003F61 R *	    push   dword  ptr bufferSize
+ 00000235  68 00000721 R   *	    push   OFFSET buffer
+ 0000023A  FF 35 0000071D R *	    push   console
  00000240  E8 00000000 E   *	    call   WriteConsoleOutputA
  00000245  E9 FFFFFF30				jmp LOOP_JOGO
 					;//-----------------------------------------------------------------------------------------------------------------------------------
@@ -854,11 +857,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
 					;//------------------------------------------------------
  0000024A				ESTADO_TROCA_FASE:
  0000024A  83 C6 07			add esi, SIZEOF DADOS_FASE ;//Incrementa o indice para o vetor de fases
- 0000024D  83 FE 14			cmp esi, SIZEOF fases - 1 ;//Verifica se ha proxima fase no vetor de fases
+ 0000024D  83 FE 1B			cmp esi, SIZEOF fases - 1 ;//Verifica se ha proxima fase no vetor de fases
  00000250  0F 83 FFFFFE5A		jae ESTADO_CREDITOS ;//Se nao ha proxima fase, finalizar o jogo
- 00000256  C7 05 00003F6A R		mov x, INI_X ;//Havendo proxima fase, reiniciar posicao do personagem, 
+ 00000256  C7 05 00003F71 R		mov x, INI_X ;//Havendo proxima fase, reiniciar posicao do personagem, 
 	   00000077
- 00000260  C7 05 00003F6E R		mov y, INI_Y
+ 00000260  C7 05 00003F75 R		mov y, INI_Y
 	   0000000F
 					INVOKE PlaySound,NULL,NULL,SND_ASYNC ;//reproduzir som de passagem
  0000026A  FF 35 0000001A R *	    push   SND_ASYNC
@@ -890,11 +893,11 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  000002A9  6A 00	   *	    push   +000000000h
  000002AB  E8 00000028	   *	    call   LimpaBuffer
 					INVOKE WriteConsoleOutput, console, ADDR buffer, bufferSize, bufferCoord, ADDR region
- 000002B0  68 00003F62 R   *	    push   OFFSET region
- 000002B5  FF 35 00003F5E R *	    push   dword  ptr bufferCoord
- 000002BB  FF 35 00003F5A R *	    push   dword  ptr bufferSize
- 000002C1  68 0000071A R   *	    push   OFFSET buffer
- 000002C6  FF 35 00000716 R *	    push   console
+ 000002B0  68 00003F69 R   *	    push   OFFSET region
+ 000002B5  FF 35 00003F65 R *	    push   dword  ptr bufferCoord
+ 000002BB  FF 35 00003F61 R *	    push   dword  ptr bufferSize
+ 000002C1  68 00000721 R   *	    push   OFFSET buffer
+ 000002C6  FF 35 0000071D R *	    push   console
  000002CC  E8 00000000 E   *	    call   WriteConsoleOutputA
 
 					exit
@@ -1126,10 +1129,10 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  0000040B  03 45 08		    add eax, bufx
  0000040E  66| 8B 55 10		    mov dx, char
  00000412  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Char, dx
-	   0000071A R
+	   00000721 R
  0000041A  66| 8B 55 14			mov dx, cor
  0000041E  66| 89 14 85		    mov buffer[eax * CHAR_INFO].Attributes, dx
-	   0000071C R
+	   00000723 R
 				    ret
  00000426  5A		   *	    pop    edx
  00000427  58		   *	    pop    eax
@@ -1396,16 +1399,16 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  00000584  F7 E2		    mul edx
  00000586  03 45 08		    add eax, px
  00000589  0F B7 0C 85			movzx ecx, buffer[eax * CHAR_INFO].Char
-	   0000071A R
+	   00000721 R
  00000591  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ' '
-	   0000071A R 20
+	   00000721 R 20
  0000059A  74 22		    jz NAO_COLIDIU
  0000059C  66| 81 3C 85		    cmp buffer[eax * CHAR_INFO].Char, 0FEh ;//Garantir que o personagem nao 'colida' consigo mesmo
-	   0000071A R
+	   00000721 R
 	   00FE
  000005A6  74 16		    jz NAO_COLIDIU
  000005A8  66| 83 3C 85		    cmp buffer[eax * CHAR_INFO].Char, ELEMENTO_OBSTACULO
-	   0000071A R 23
+	   00000721 R 23
  000005B1  74 12		    jz COLIDIU_OBSTACULO
  000005B3  B8 00000002		    mov eax, 2 ;//Colidiu com o objetivo
  000005B8			RESUME2:
@@ -1427,7 +1430,7 @@ Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
  000005CC			ChecaColisao ENDP
 
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 22:52:49
+Microsoft (R) Macro Assembler Version 14.16.27031.1	    06/30/19 23:45:13
 LAbrint						     Symbols 2 - 1
 
 
@@ -1539,7 +1542,7 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
-_DATA  . . . . . . . . . . . . .	32 Bit	 00003F72 Para	  Public  'DATA'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00003F79 Para	  Public  'DATA'	
 _TEXT  . . . . . . . . . . . . .	32 Bit	 000005CC Para	  Public  'CODE'	
 
 
@@ -1979,12 +1982,12 @@ addrRdp  . . . . . . . . . . . .	Number	 0000005Dh
 black  . . . . . . . . . . . . .	Number	 00000000h   
 blue . . . . . . . . . . . . . .	Number	 00000001h   
 brown  . . . . . . . . . . . . .	Number	 00000006h   
-bufferCoord  . . . . . . . . . .	COORD	 00003F5E _DATA	
-bufferSize . . . . . . . . . . .	COORD	 00003F5A _DATA	
-buffer . . . . . . . . . . . . .	CHAR_INFO  0000071A _DATA	
+bufferCoord  . . . . . . . . . .	COORD	 00003F65 _DATA	
+bufferSize . . . . . . . . . . .	COORD	 00003F61 _DATA	
+buffer . . . . . . . . . . . . .	CHAR_INFO  00000721 _DATA	
 character  . . . . . . . . . . .	Word	 00000059 _DATA	
 congrats . . . . . . . . . . . .	Byte	 0000003D _DATA	
-console  . . . . . . . . . . . .	DWord	 00000716 _DATA	
+console  . . . . . . . . . . . .	DWord	 0000071D _DATA	
 cpBLine  . . . . . . . . . . . .	Number	 00000001h   
 cpRdp2 . . . . . . . . . . . . .	Number	 0000002Ah   
 cpRdp  . . . . . . . . . . . . .	Number	 00000010h   
@@ -2009,7 +2012,7 @@ magenta  . . . . . . . . . . . .	Number	 00000005h
 menu_music . . . . . . . . . . .	Byte	 0000004A _DATA	
 prox_fasew . . . . . . . . . . .	Byte	 00000032 _DATA	
 red  . . . . . . . . . . . . . .	Number	 00000004h   
-region . . . . . . . . . . . . .	SMALL_RECT  00003F62 _DATA	
+region . . . . . . . . . . . . .	SMALL_RECT  00003F69 _DATA	
 sBLine . . . . . . . . . . . . .	Byte	 0000005B _DATA	
 sCrdtL1  . . . . . . . . . . . .	Byte	 000002AC _DATA	
 sCrdtL2  . . . . . . . . . . . .	Byte	 000002C0 _DATA	
@@ -2032,9 +2035,9 @@ sRdp2  . . . . . . . . . . . . .	Byte	 0000006D _DATA
 sRdp . . . . . . . . . . . . . .	Byte	 0000005D _DATA	
 white  . . . . . . . . . . . . .	Number	 0000000Fh   
 wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
-x  . . . . . . . . . . . . . . .	DWord	 00003F6A _DATA	
+x  . . . . . . . . . . . . . . .	DWord	 00003F71 _DATA	
 yellow . . . . . . . . . . . . .	Number	 0000000Eh   
-y  . . . . . . . . . . . . . . .	DWord	 00003F6E _DATA	
+y  . . . . . . . . . . . . . . .	DWord	 00003F75 _DATA	
 
 	   0 Warnings
 	   0 Errors

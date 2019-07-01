@@ -234,7 +234,8 @@ pszSound: PTR BYTE,
 		<2d, 70d, 15d>, <3d, 3d, 5d>, <4d, 2d, 25d>, <3d, 20d, 8d>, <4d, 70d, 20d>, <3d, 10d, 14d>, <4d, 1d, 16d>,
 		<2d, 1d, 5d>, <4d, 1d, 15d>
 
-	fases DADOS_FASE <OFFSET fase4, LENGTHOF fase4, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>
+	fases DADOS_FASE <OFFSET fase1, LENGTHOF fase1, 4d>, <OFFSET fase2, LENGTHOF fase2, 18d>, <OFFSET fase3, LENGTHOF fase3, 15d>, 
+		<OFFSET fase4, LENGTHOF fase4, 17d>
 	;//------------------------------------------------------------------------------------------------------------------
 
 
